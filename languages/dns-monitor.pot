@@ -1,0 +1,318 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the DNS Monitor package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: DNS Monitor 1.0.0\n"
+"Report-Msgid-Bugs-To: https://indagodigital.us/dns-monitor\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: WordPress\n"
+
+#: includes/admin/class-dns-monitor-admin.php:256
+#: includes/admin/class-dns-monitor-admin.php:270
+#: includes/admin/class-dns-monitor-admin.php:287
+#: includes/admin/class-dns-monitor-admin.php:627
+#: includes/admin/class-dns-monitor-admin.php:641
+#: includes/admin/class-dns-monitor-admin.php:698
+#: includes/admin/class-dns-monitor-admin.php:724
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:265
+#: includes/admin/class-dns-monitor-admin.php:282
+#: includes/admin/class-dns-monitor-admin.php:636
+#: includes/admin/class-dns-monitor-admin.php:719
+msgid "Security check failed. Please try again."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:275
+msgid "Domain removed successfully."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:296
+#, php-format
+msgid "DNS check is already in progress for %s. Please try again in a few moments."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:302
+#, php-format
+msgid "DNS check completed for %s. No changes detected."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:313
+#, php-format
+msgid "DNS changes detected for %s. Notification email sent."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:317
+#, php-format
+msgid "Could not retrieve DNS records for %s."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:330
+#, php-format
+msgid "Redirecting back to snapshots in 2 seconds... %s"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:330
+#: includes/admin/class-dns-monitor-admin.php:364
+msgid "Click here if you are not redirected automatically"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:364
+#, php-format
+msgid "Redirecting to domain snapshots... %s"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:371
+msgid "DNS Monitor Snapshots"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:372
+#: includes/admin/class-dns-monitor-admin.php:220
+msgid "Add New Domain"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:375
+#, php-format
+msgid "No domains are being monitored. %s"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:375
+msgid "Add your first domain"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:380
+msgid "Domain Name"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:381
+msgid "Date Added"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:382
+msgid "Last Checked"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:383
+msgid "Last Snapshot"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:384
+#: includes/admin/class-dns-monitor-admin.php:475
+msgid "Actions"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:388
+#: includes/admin/class-dns-monitor-admin.php:169
+msgid "Never"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:399
+#: includes/admin/class-dns-monitor-admin.php:410
+msgid "DNS check in progress"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:406
+msgid "View Snapshots"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:409
+#: includes/admin/class-dns-monitor-admin.php:411
+#: includes/admin/class-dns-monitor-admin.php:457
+msgid "Check Now"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:413
+msgid "Are you sure you want to stop monitoring this domain and delete its data? This action cannot be undone."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:413
+msgid "Delete"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:435
+msgid "Domain not found."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:453
+#, php-format
+msgid "DNS Snapshots for %s"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:461
+msgid "Back to Domains"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:465
+msgid "No snapshots found for this domain."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:474
+msgid "Date"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:495
+msgid "View Records"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:509
+#, php-format
+msgid "Current Snapshot (%s)"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:545
+#: includes/admin/class-dns-monitor-admin.php:575
+#: includes/admin/class-dns-monitor-admin.php:596
+msgid "Type:"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:561
+#, php-format
+msgid "Previous Snapshot (%s)"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:592
+#, php-format
+msgid "Initial Snapshot (%s)"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:596
+#, php-format
+msgid "Type: %s"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:657
+msgid "Domain added successfully."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:660
+msgid "This domain is already being monitored."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:665
+msgid "Add Domain to Monitor"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:673
+msgid "Enter the domain name without http:// or www."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:678
+msgid "Add Domain"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:745
+msgid "No valid email addresses provided. Using admin email as default."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:801
+msgid "Settings saved successfully."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:805
+msgid "DNS Monitor Settings"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:813
+msgid "Notification Emails"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:816
+msgid "Email addresses to receive DNS change notifications. Enter one email per line or separate with commas."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:821
+msgid "Check Frequency"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:824
+msgid "Hourly"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:825
+msgid "Twice Daily"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:826
+msgid "Daily"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:828
+msgid "How often to check for DNS changes."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:833
+msgid "Next scheduled check:"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:837
+msgid "Warning:"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:837
+#, php-format
+msgid "Scheduled frequency (%s) does not match setting. Save settings to fix."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:840
+msgid "No cron job scheduled. Save settings to fix."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:847
+msgid "Snapshot Behavior"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:850
+msgid "Always"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:851
+msgid "Changes Only"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:853
+msgid "Choose when to save DNS records to the database. \"Always\" will create a snapshot on every check. \"Changes Only\" will create a snapshot when DNS changes are detected."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:858
+msgid "Delete Data on Uninstall"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:861
+msgid "Yes"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:862
+msgid "No"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:864
+msgid "Choose whether to delete all plugin data (domains, snapshots, settings) when the plugin is uninstalled. If set to \"No\", your data will be preserved if you reinstall the plugin later."
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:869
+msgid "Save Settings"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:209
+msgid "DNS Monitor"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:216
+msgid "Snapshots"
+msgstr ""
+
+#: includes/admin/class-dns-monitor-admin.php:224
+msgid "Settings"
+msgstr "" 

@@ -1,0 +1,509 @@
+/**
+ * DNS Monitor Admin Styles
+ */
+
+.dns-records-content {
+	display: none;
+	padding: 15px;
+	background-color: #f9f9f9;
+	border-top: 1px solid #e1e1e1;
+	margin-top: 5px;
+}
+
+.dns-toggle-records {
+	cursor: pointer;
+	color: #0073aa;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	padding: 5px;
+	border-radius: 3px;
+	transition: all 0.2s ease;
+}
+
+.dns-toggle-records:hover,
+.dns-toggle-records:focus {
+	color: #00a0d2;
+	background-color: rgba(0, 115, 170, 0.05);
+	box-shadow: none;
+	outline: none;
+}
+
+.dns-toggle-records .dashicons {
+	margin-right: 5px;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	transition: transform 0.2s ease;
+}
+
+.dns-comparison {
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+}
+
+.dns-column {
+	flex: 1;
+	padding: 10px;
+}
+
+.dns-column-header {
+	font-weight: bold;
+	margin-bottom: 10px;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #ccc;
+}
+
+.dns-record-diff {
+	background-color: #ffeaea;
+}
+
+.dns-record-added {
+	background-color: #e6ffe6;
+}
+
+.dns-record-removed {
+	background-color: #ffd6d6;
+}
+
+.dns-record-unchanged {
+	background-color: transparent;
+}
+
+.dns-record-block {
+	margin-bottom: 10px;
+	padding: 8px;
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dns-record-block strong {
+	text-transform: uppercase;
+}
+
+#notification_email {
+	max-width: 450px;
+	width: 100%;
+}
+
+/* Domain lock indicator */
+.dns-checking-indicator {
+	margin-left: 8px;
+	color: #f56e28;
+	display: inline-block;
+	animation: dns-spin 1s linear infinite;
+}
+
+.dns-checking-indicator .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
+@keyframes dns-spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.dns-action-disabled {
+	color: #a0a5aa;
+	cursor: not-allowed;
+}
+
+#dns-monitor-domains-table td,
+#dns-monitor-snapshots-table td {
+	vertical-align: middle;
+}
+
+#dns-monitor-snapshots-table tbody > tr.snapshot-row:nth-child(4n+1) {
+	background-color: #f6f7f7;
+}
+
+/* Changes detected badges */
+.dns-changes-breakdown {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+
+.dns-badge {
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	color: white;
+	text-align: center;
+	min-width: 20px;
+}
+
+.dns-badge-addition {
+	background-color: #28a745;
+}
+
+.dns-badge-removal {
+	background-color: #dc3545;
+}
+
+.dns-badge-modification {
+	background-color: #ffc107;
+	color: #212529;
+}
+
+#dns-monitor-snapshots-table tbody .snapshot-records-row td {
+	background-color: white;
+}
+
+/* DNS Changes Highlighting */
+#dns-monitor-snapshots-table .dns-changes-detected td {
+	background-color: #fffed680 !important;
+}
+
+
+
+/* Admin Footer Styles */
+.dns-monitor-admin-footer {
+	margin: 40px 20px 0 0;
+	padding: 25px;
+	background: white;
+}
+
+.dns-monitor-footer-content {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+	max-width: 100%;
+}
+
+.dns-monitor-footer-text p {
+	margin: 0 0 1em;
+}
+
+.dns-monitor-footer-text p:last-child {
+	margin-bottom: 0;
+}
+
+/* FAQ Styles */
+.dns-monitor-footer-text h3 {
+	margin: 0 0 20px 0;
+	font-size: 18px;
+	color: #1d2327;
+	border-bottom: 2px solid #0073aa;
+	padding-bottom: 8px;
+}
+
+.dns-monitor-faq-item {
+	margin-bottom: 20px;
+	padding: 15px;
+	background: #f6f7f7;
+	border-left: 4px solid #0073aa;
+}
+
+.dns-monitor-faq-item h4 {
+	margin: 0 0 10px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.dns-monitor-faq-item p {
+	margin: 0 0 8px 0;
+	color: #50575e;
+	line-height: 1.5;
+}
+
+.dns-monitor-faq-item p:last-child {
+	margin-bottom: 0;
+}
+
+.dns-monitor-faq-item ul {
+	margin: 8px 0 0 0;
+	padding-left: 20px;
+}
+
+.dns-monitor-faq-item ul li {
+	margin-bottom: 5px;
+	color: #50575e;
+	line-height: 1.4;
+}
+
+.dns-monitor-faq-item ul li:last-child {
+	margin-bottom: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+	.dns-monitor-footer-content {
+		flex-direction: column;
+		text-align: center;
+	}
+}
+
+/* HTMX-Specific Styles */
+
+/* Loading states */
+.dns-monitor-loading {
+	position: relative;
+	opacity: 0.7;
+}
+
+.dns-monitor-card-loading {
+	position: relative;
+	pointer-events: none;
+}
+
+.dns-monitor-loading-overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(255, 255, 255, 0.8);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+}
+
+.dns-monitor-loading-overlay .spinner {
+	margin: 0;
+	float: none;
+}
+
+/* HTMX Notifications */
+.dns-monitor-notifications {
+	position: fixed;
+	top: 32px;
+	right: 20px;
+	z-index: 100000;
+	max-width: 400px;
+}
+
+.dns-monitor-notification {
+	margin-bottom: 10px;
+	padding: 10px 15px;
+	border-radius: 4px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	animation: dns-notification-slide-in 0.3s ease;
+	transition: opacity 0.3s ease;
+}
+
+@keyframes dns-notification-slide-in {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+/* HTMX Button Loading States */
+button.dns-monitor-loading {
+	cursor: wait;
+}
+
+button.dns-monitor-loading .spinner {
+	margin-left: 5px;
+	float: none;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+/* HTMX Form Styles */
+.dns-monitor-htmx-form {
+	background: #fff;
+	padding: 20px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	margin-bottom: 20px;
+}
+
+.dns-monitor-htmx-form .form-table {
+	margin-top: 0;
+}
+
+/* HTMX Card Component */
+.dns-monitor-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	margin-bottom: 20px;
+	overflow: hidden;
+	transition: box-shadow 0.15s ease-in-out;
+}
+
+.dns-monitor-card:hover {
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.dns-monitor-card-header {
+	padding: 15px 20px;
+	border-bottom: 1px solid #f0f0f1;
+	background: #f6f7f7;
+	font-weight: 600;
+	color: #1d2327;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.dns-monitor-card-header .dns-monitor-button-group {
+	margin-left: auto;
+}
+
+.dns-monitor-card-body {
+	padding: 20px;
+}
+
+.dns-monitor-card-footer {
+	padding: 15px 20px;
+	border-top: 1px solid #f0f0f1;
+	background: #f6f7f7;
+	text-align: right;
+}
+
+/* HTMX Progress Indicators */
+.dns-monitor-progress {
+	background-color: #f0f0f1;
+	border-radius: 10px;
+	overflow: hidden;
+	height: 20px;
+	margin: 10px 0;
+}
+
+.dns-monitor-progress-bar {
+	height: 100%;
+	background: linear-gradient(90deg, #0073aa 0%, #00a0d2 100%);
+	transition: width 0.3s ease;
+	border-radius: 10px;
+}
+
+/* HTMX Content Areas */
+#dns-monitor-content {
+	min-height: 200px;
+}
+
+.dns-monitor-content-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 200px;
+	color: #646970;
+}
+
+.dns-monitor-results-area {
+	margin-top: 20px;
+}
+
+.dns-monitor-results-area:empty {
+	display: none;
+}
+
+/* HTMX Button Groups */
+.dns-monitor-button-group {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.dns-monitor-button-group .button {
+	margin: 0;
+}
+
+/* HTMX Status Indicators */
+.dns-monitor-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.dns-monitor-status.success {
+	background: #d4edda;
+	color: #155724;
+}
+
+.dns-monitor-status.error {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.dns-monitor-status.warning {
+	background: #fff3cd;
+	color: #856404;
+}
+
+.dns-monitor-status.info {
+	background: #d1ecf1;
+	color: #0c5460;
+}
+
+/* HTMX Tables */
+.dns-monitor-htmx-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 20px 0;
+}
+
+.dns-monitor-htmx-table th,
+.dns-monitor-htmx-table td {
+	padding: 12px 15px;
+	text-align: left;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.dns-monitor-htmx-table th {
+	background: #f6f7f7;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.dns-monitor-htmx-table tbody tr:hover {
+	background: #f6f7f7;
+}
+
+/* HTMX Responsive utilities */
+@media (max-width: 768px) {
+	.dns-monitor-notifications {
+		right: 10px;
+		left: 10px;
+		max-width: none;
+	}
+	
+	.dns-monitor-button-group {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.dns-monitor-card-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+	
+	.dns-monitor-card-header .dns-monitor-button-group {
+		margin-left: 0;
+		width: 100%;
+	}
+	
+	.dns-monitor-card-body {
+		padding: 15px;
+	}
+}
+
