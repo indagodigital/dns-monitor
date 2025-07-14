@@ -42,6 +42,9 @@ function dns_monitor_uninstall_cleanup() {
 		// Drop plugin database tables.
 		$table_prefix = $wpdb->prefix . 'dns_';
 		
+		// Drop records table first (has foreign key reference).
+		$wpdb->query( "DROP TABLE IF EXISTS {$table_prefix}records" );
+		
 		// Drop snapshots table.
 		$wpdb->query( "DROP TABLE IF EXISTS {$table_prefix}snapshots" );
 

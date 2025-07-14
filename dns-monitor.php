@@ -25,7 +25,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'DNS_MONITOR_VERSION', '1.0.0' );
 define( 'DNS_MONITOR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DNS_MONITOR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'DNS_MONITOR_SITE_URL', 'https://indagodigital.us' /* get_site_url() */ );
+define( 'DNS_MONITOR_SITE_URL', get_site_url() );
+
 
 
 // Include the main DNS Monitor class.

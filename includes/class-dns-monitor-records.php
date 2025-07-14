@@ -38,7 +38,10 @@ class DNS_Monitor_Records {
 			$previous_records = null;
 			if ( $result['last_record'] ) {
 				$db = new DNS_Monitor_DB();
-				$previous_records = $db->decode_snapshot_records( $result['last_record']->snapshot_records );
+				$db_records = $db->get_snapshot_records( $result['last_record']->ID );
+				if ( $db_records !== false ) {
+					$previous_records = $db->convert_db_records_to_dns_format( $db_records );
+				}
 			}
 			$notifications->send_change_notification( $domain, $result['records'], $previous_records );
 		}
@@ -88,22 +91,41 @@ class DNS_Monitor_Records {
 				'total' => 0,
 			);
 			if ( $last_record ) {
-				$previous_records = $db->decode_snapshot_records( $last_record->snapshot_records );
-				if ( $previous_records ) {
-					$changes_breakdown = $db->calculate_dns_changes( $records, $previous_records );
+				$db_records = $db->get_snapshot_records( $last_record->ID );
+				if ( $db_records !== false ) {
+					$previous_records = $db->convert_db_records_to_dns_format( $db_records );
+					if ( $previous_records ) {
+						$changes_breakdown = $db->calculate_dns_changes( $records, $previous_records );
+					}
 				}
 			}
 
-			// Check if this is a new record or if changes were detected.
-			if ( $check_for_changes && $last_record && $changes_breakdown['total'] > 0 ) {
-				$result['changes_detected'] = true;
-			}
+					// Check if this is a new record or if changes were detected.
+		if ( $check_for_changes && $last_record && $changes_breakdown['total'] > 0 ) {
+			$result['changes_detected'] = true;
+		}
+
+		// Add changes breakdown to result for API usage
+		$result['changes_breakdown'] = $changes_breakdown;
 
 			// Save the snapshot if requested AND (it's the first snapshot OR changes were detected).
 			$is_first_snapshot = ! $last_record;
 			$snapshot_behavior = get_option( 'dns_monitor_snapshot_behavior', 'always' );
 			if ( $save_snapshot && ( $is_first_snapshot || $result['changes_detected'] || $snapshot_behavior === 'always' ) ) {
-				$db->add_snapshot( $records_json, $changes_breakdown );
+				// Use transactional method to ensure atomicity between snapshot and records creation
+				$snapshot_id = $db->create_snapshot_with_records( $records, $changes_breakdown );
+				
+				// Check if the transactional operation succeeded
+				if ( false === $snapshot_id ) {
+					// Log error and set result to indicate failure
+					error_log( 'DNS Monitor: Failed to create snapshot with records atomically for domain: ' . $domain_name );
+					$result['snapshot_error'] = true;
+					$result['snapshot_error_message'] = 'Failed to save DNS snapshot. Please check error logs.';
+				} else {
+					// Success - add snapshot ID to result for reference
+					$result['snapshot_id'] = $snapshot_id;
+					$result['snapshot_saved'] = true;
+				}
 			}
 		}
 
@@ -183,25 +205,6 @@ class DNS_Monitor_Records {
 					}
 				}
 				return '';
-
-			case 'SRV':
-				// Sort by priority, weight, port, then target.
-				$priority = isset( $record['pri'] ) ? str_pad( $record['pri'], 5, '0', STR_PAD_LEFT ) : '00000';
-				$weight = isset( $record['weight'] ) ? str_pad( $record['weight'], 5, '0', STR_PAD_LEFT ) : '00000';
-				$port = isset( $record['port'] ) ? str_pad( $record['port'], 5, '0', STR_PAD_LEFT ) : '00000';
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				return $priority . '|' . $weight . '|' . $port . '|' . $target;
-
-			case 'SOA':
-				// Sort by primary name server.
-				return isset( $record['mname'] ) ? $record['mname'] : '';
-
-			case 'CAA':
-				// Sort by flags, tag, then value.
-				$flags = isset( $record['flags'] ) ? str_pad( $record['flags'], 3, '0', STR_PAD_LEFT ) : '000';
-				$tag = isset( $record['tag'] ) ? $record['tag'] : '';
-				$value = isset( $record['value'] ) ? $record['value'] : '';
-				return $flags . '|' . $tag . '|' . $value;
 
 			default:
 				// For unknown record types, try common fields in order of preference.

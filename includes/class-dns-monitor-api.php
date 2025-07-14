@@ -111,24 +111,51 @@ class DNS_Monitor_API {
 			$result = DNS_Monitor_Records::fetch_and_process_records( $domain, true, true );
 
 			if ( $result ) {
+				// Check if there was a snapshot error
+				if ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) {
+					$error_message = isset( $result['snapshot_error_message'] ) 
+						? $result['snapshot_error_message'] 
+						: __( 'Failed to save DNS snapshot.', 'dns-monitor' );
+					return $this->error_response( $error_message );
+				}
+
+				// Get the total number of changes
+				$total_changes = isset( $result['changes_breakdown']['total'] ) ? $result['changes_breakdown']['total'] : 0;
+				
 				$message = $result['changes_detected'] 
-					? __( 'DNS check completed. Changes detected and snapshot saved.', 'dns-monitor' )
-					: __( 'DNS check completed. No changes detected.', 'dns-monitor' );
+					? sprintf( 
+						/* translators: %d: Number of changes detected */
+						_n( 
+							'DNS check completed. %d change found.', 
+							'DNS check completed. %d changes found.', 
+							$total_changes, 
+							'dns-monitor' 
+						), 
+						$total_changes 
+					)
+					: __( 'DNS check completed. No changes found.', 'dns-monitor' );
 
 				$status = $result['changes_detected'] ? 'warning' : 'success';
 
-				// Return updated button state and notification
-				return $this->success_response( 
-					$message, 
-					array(
-						'changes_detected' => $result['changes_detected'],
-						'total_records' => count( $result['records'] ?? array() ),
-						'last_check' => current_time( 'mysql' ),
-						'domain' => $domain,
-						'refresh_snapshots' => true, // Signal to refresh the snapshots table
-					),
-					$status
+				// Build response data
+				$response_data = array(
+					'changes_detected' => $result['changes_detected'],
+					'total_records' => count( $result['records'] ?? array() ),
+					'last_check' => current_time( 'mysql' ),
+					'domain' => $domain,
+					'refresh_snapshots' => true, // Signal to refresh the snapshots table
 				);
+
+				// Add snapshot info if available
+				if ( isset( $result['snapshot_saved'] ) && $result['snapshot_saved'] ) {
+					$response_data['snapshot_saved'] = true;
+					if ( isset( $result['snapshot_id'] ) ) {
+						$response_data['snapshot_id'] = $result['snapshot_id'];
+					}
+				}
+
+				// Return updated button state and notification
+				return $this->success_response( $message, $response_data, $status );
 			} else {
 				return $this->error_response( __( 'DNS check failed. Unable to retrieve DNS records.', 'dns-monitor' ) );
 			}
@@ -161,16 +188,17 @@ class DNS_Monitor_API {
 		$db = new DNS_Monitor_DB();
 		$page = max( 1, intval( $request['page'] ?? 1 ) );
 		$per_page = max( 1, min( 100, intval( $request['per_page'] ?? 20 ) ) );
+		$unified_view = isset( $request['unified_view'] ) && $request['unified_view'];
 
 		$snapshots = $db->get_snapshots( $page, $per_page );
 
 		if ( empty( $snapshots ) ) {
 			return '<div class="dns-monitor-content-loading">' . 
-				   esc_html__( 'No snapshots found.', 'dns-monitor' ) . 
+				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
 				   '</div>';
 		}
 
-		$html = $this->render_snapshots_table( $snapshots, $db );
+		$html = $this->render_snapshots_list( $snapshots, $db, $unified_view );
 		return $html;
 	}
 
@@ -194,12 +222,12 @@ class DNS_Monitor_API {
 			return $this->error_response( __( 'Snapshot not found.', 'dns-monitor' ) );
 		}
 
-		$records = $db->decode_snapshot_records( $snapshot->snapshot_records );
-		$previous_record = $db->get_previous_snapshot( $snapshot->domain, $snapshot->checked_at );
+		$records = $this->get_records_for_snapshot( $snapshot->ID, $db );
+		$previous_record = $db->get_previous_snapshot( $snapshot->ID );
 		$previous_records = null;
 
 		if ( $previous_record ) {
-			$previous_records = $db->decode_snapshot_records( $previous_record->snapshot_records );
+			$previous_records = $this->get_records_for_snapshot( $previous_record->ID, $db );
 		}
 
 		return $this->render_snapshot_details( $snapshot, $records, $previous_records );
@@ -236,29 +264,29 @@ class DNS_Monitor_API {
 	 *
 	 * @param array $snapshots Snapshots array.
 	 * @param DNS_Monitor_DB $db Database instance.
+	 * @param bool $unified_view Whether to use unified view (default: true).
 	 * @return string HTML table.
 	 */
-	private function render_snapshots_table( $snapshots, $db ) {
+	private function render_snapshots_list( $snapshots, $db, $unified_view = true ) {
 		if ( empty( $snapshots ) ) {
 			return '<div class="dns-monitor-content-loading">' . 
 				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
 				   '</div>';
 		}
 
-		$html = '<table id="dns-monitor-snapshots-table" class="wp-list-table widefat fixed">';
-		$html .= '<thead>';
-		$html .= '<tr>';
-		$html .= '<th>' . esc_html__( 'Date', 'dns-monitor' ) . '</th>';
-		$html .= '<th>' . esc_html__( 'Changes', 'dns-monitor' ) . '</th>';
-		$html .= '<th>' . esc_html__( 'Actions', 'dns-monitor' ) . '</th>';
-		$html .= '</tr>';
-		$html .= '</thead>';
-		$html .= '<tbody>';
+		$html = '<div id="dns-monitor-snapshots-list" class="dns-snapshots-list">';
 
-		foreach ( $snapshots as $index => $snapshot ) {
-			$records = $db->decode_snapshot_records( $snapshot->snapshot_records );
+		// Limit to 10 snapshots using a for loop to maintain proper previous snapshot references
+		$total_snapshots = count( $snapshots );
+		$max_snapshots = min( 10, $total_snapshots );
+		
+		for ( $index = 0; $index < $max_snapshots; $index++ ) {
+			$snapshot = $snapshots[ $index ];
+			
+			// Get records from the dns_records table instead of JSON data
+			$records = $this->get_records_for_snapshot( $snapshot->ID, $db );
 			if ( $records === false ) {
-				continue; // Skip corrupted snapshots
+				continue; // Skip snapshots with no records
 			}
 
 			// Get the changes breakdown from the database
@@ -270,58 +298,50 @@ class DNS_Monitor_API {
 			// Get the previous record for comparison (for display purposes)
 			$previous_record = null;
 			$previous_records = array();
-			if ( $index < count( $snapshots ) - 1 ) {
+			if ( $index < $total_snapshots - 1 ) {
 				$previous_record = $snapshots[ $index + 1 ];
-				$previous_records = $db->decode_snapshot_records( $previous_record->snapshot_records );
+				$previous_records = $this->get_records_for_snapshot( $previous_record->ID, $db );
 				if ( $previous_records === false ) {
-					$previous_records = array(); // Handle corrupted data gracefully
+					$previous_records = array(); // Handle missing data gracefully
 				}
 			}
 
-			// Add CSS class for highlighting rows with changes
-			$row_class = $changes_count > 0 ? 'dns-changes-detected' : '';
+			// Add CSS class for highlighting cards with changes
+			$card_class = $changes_count > 0 ? 'dns-changes-detected' : '';
 			
-			$html .= '<tr class="snapshot-row ' . esc_attr( $row_class ) . '">';
-			$html .= '<td>' . esc_html( $this->format_wp_date( $snapshot->created_at ) ) . '</td>';
-			$html .= '<td>';
+			$html .= '<div class="dns-snapshot-card ' . esc_attr( $card_class ) . '" data-snapshot-id="' . esc_attr( $snapshot->ID ) . '">';
 			
+			// Card header with date and changes summary (clickable)
+			$html .= '<div class="dns-snapshot-card-header dns-toggle-records" data-record-id="' . esc_attr( $snapshot->ID ) . '" aria-expanded="false" aria-controls="dns-record-content-' . esc_attr( $snapshot->ID ) . '" role="button" tabindex="0">';
+			$html .= '<div class="dns-snapshot-info">';
+			$html .= '<div class="dns-snapshot-date">' . esc_html( $this->format_wp_date( $snapshot->created_at ) ) . '</div>';
+			
+			$html .= '<div class="dns-snapshot-badges">';
 			if ( $changes_count > 0 ) {
-				$html .= '<div class="dns-changes-breakdown">';
-
-				$html .= '<span title="' . esc_attr__( 'Changes', 'dns-monitor' ) . '">' . esc_html( $changes_count ) . ' Changes</span>';
-
 				if ( $additions > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-addition" title="' . esc_attr__( 'Additions', 'dns-monitor' ) . '">+' . esc_html( $additions ) . '</span>';
-				}
-				if ( $removals > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-removal" title="' . esc_attr__( 'Removals', 'dns-monitor' ) . '">−' . esc_html( $removals ) . '</span>';
+					$html .= '<span class="dns-badge dns-badge-addition" title="' . esc_attr__( 'Additions', 'dns-monitor' ) . '"></span>';
 				}
 				if ( $modifications > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-modification" title="' . esc_attr__( 'Modifications', 'dns-monitor' ) . '">~' . esc_html( $modifications ) . '</span>';
+					$html .= '<span class="dns-badge dns-badge-modification" title="' . esc_attr__( 'Modifications', 'dns-monitor' ) . '"></span>';
 				}
-				$html .= '</div>';
-			} else {
-				$html .= '<span>0 Changes</span>';
+				if ( $removals > 0 ) {
+					$html .= '<span class="dns-badge dns-badge-removal" title="' . esc_attr__( 'Removals', 'dns-monitor' ) . '"></span>';
+				}
 			}
+			$html .= '</div>';
+			$html .= '</div>'; // End snapshot info
 			
-			$html .= '</td>';
-			$html .= '<td>';
-			$html .= '<a href="#" class="dns-toggle-records" data-record-id="' . esc_attr( $snapshot->ID ) . '" aria-expanded="false" aria-controls="dns-record-content-' . esc_attr( $snapshot->ID ) . '">';
-			$html .= '<span class="dashicons dashicons-arrow-right"></span>';
-			$html .= '<span class="toggle-text">' . esc_html__( 'View Records', 'dns-monitor' ) . '</span>';
-			$html .= '</a>';
-			$html .= '</td>';
-			$html .= '</tr>';
+			$html .= '</div>'; // End card header
 			
-			$html .= '<tr class="snapshot-records-row">';
-			$html .= '<td colspan="3" class="dns-records-content" id="dns-record-content-' . esc_attr( $snapshot->ID ) . '">';
+			// Card content (initially hidden)
+			$html .= '<div class="dns-snapshot-card-content" id="dns-record-content-' . esc_attr( $snapshot->ID ) . '">';
 			$html .= $this->render_snapshot_comparison_admin( $snapshot, $previous_record, $records, $previous_records, $db );
-			$html .= '</td>';
-			$html .= '</tr>';
+			$html .= '</div>';
+			
+			$html .= '</div>'; // End card
 		}
 
-		$html .= '</tbody>';
-		$html .= '</table>';
+		$html .= '</div>'; // End list
 
 		return $html;
 	}
@@ -376,31 +396,30 @@ class DNS_Monitor_API {
 	 * @return string HTML comparison.
 	 */
 	private function render_snapshot_comparison_admin( $snapshot, $previous_record, $records, $previous_records, $db ) {
-		$ignore_keys = array( 'class', 'ttl', 'entries' );
-
 		if ( $previous_record ) {
-			$html = '<div class="dns-comparison">';
-			// Current snapshot column
-			$html .= '<div class="dns-column">';
-			$html .= '<div class="dns-column-header">' . sprintf( __( 'Current Snapshot (%s)', 'dns-monitor' ), esc_html( $this->format_wp_date( $snapshot->created_at ) ) ) . '</div>';
+			// Calculate changes for unified display
+			$changes = array(
+				'added' => array(),
+				'removed' => array(),
+				'modified' => array()
+			);
 
-			// Process current records
+			// Process current records to find additions and modifications
 			$current_record_keys = array();
 			foreach ( $records as $dns_record ) {
-				// Use TTL-ignoring record key generation method
 				$record_key = $db->get_record_key_without_ttl( $dns_record );
 				$current_record_keys[] = $record_key;
 
-				// Find if this record exists in previous snapshot
 				$found = false;
 				$changed = false;
+				$original_record = null;
 
 				foreach ( $previous_records as $prev_record ) {
-					// Use TTL-ignoring record key generation method
 					$prev_key = $db->get_record_key_without_ttl( $prev_record );
 
 					if ( $record_key === $prev_key ) {
 						$found = true;
+						$original_record = $prev_record;
 
 						// Check if any values changed (ignoring TTL)
 						foreach ( $dns_record as $key => $value ) {
@@ -417,77 +436,45 @@ class DNS_Monitor_API {
 					}
 				}
 
-				$class = $found ? ( $changed ? 'dns-record-diff' : 'dns-record-unchanged' ) : 'dns-record-added';
-				
-				$html .= '<div class="dns-record-block ' . esc_attr( $class ) . '">';
-				$html .= '<strong>' . esc_html__( 'Type:', 'dns-monitor' ) . '</strong> ' . esc_html( $dns_record['type'] ) . '<br>';
-
-				foreach ( $dns_record as $key => $value ) {
-					if ( in_array( $key, $ignore_keys ) ) {
-						continue;
-					}
-					
-					if ( 'type' !== $key ) {
-						$html .= '<strong>' . esc_html( $key ) . ':</strong> ' . esc_html( is_array( $value ) ? wp_json_encode( $value ) : $value ) . '<br>';
-					}
+				if ( ! $found ) {
+					$changes['added'][] = array(
+						'record' => $dns_record,
+						'type' => 'added'
+					);
+				} elseif ( $changed ) {
+					$changes['modified'][] = array(
+						'record' => $dns_record,
+						'original' => $original_record,
+						'type' => 'modified'
+					);
 				}
-				$html .= '</div>';
 			}
 
-			$html .= '</div>';
-
-			// Previous snapshot column
-			$html .= '<div class="dns-column">';
-			$html .= '<div class="dns-column-header">' . sprintf( __( 'Previous Snapshot (%s)', 'dns-monitor' ), esc_html( $this->format_wp_date( $previous_record->created_at ) ) ) . '</div>';
-
-			// Process previous records
+			// Process previous records to find removals
 			foreach ( $previous_records as $dns_record ) {
-				// Use TTL-ignoring record key generation method
 				$record_key = $db->get_record_key_without_ttl( $dns_record );
-
-				// Check if this record exists in current snapshot
-				$exists_in_current = in_array( $record_key, $current_record_keys );
-
-				$class = $exists_in_current ? 'dns-record-unchanged' : 'dns-record-removed';
 				
-				$html .= '<div class="dns-record-block ' . esc_attr( $class ) . '">';
-				$html .= '<strong>' . esc_html__( 'Type:', 'dns-monitor' ) . '</strong> ' . esc_html( $dns_record['type'] ) . '<br>';
-
-				foreach ( $dns_record as $key => $value ) {
-					if ( in_array( $key, $ignore_keys ) ) {
-						continue;
-					}
-
-					if ( 'type' !== $key ) {
-						$html .= '<strong>' . esc_html( $key ) . ':</strong> ' . esc_html( is_array( $value ) ? wp_json_encode( $value ) : $value ) . '<br>';
-					}
+				if ( ! in_array( $record_key, $current_record_keys ) ) {
+					$changes['removed'][] = array(
+						'record' => $dns_record,
+						'type' => 'removed'
+					);
 				}
-				$html .= '</div>';
 			}
 
+			// Render unified records list
+			$html .= '<div class="dns-records-container">';
+			$html .= $this->render_unified_records_list( $records, $previous_records, $changes, $db );
 			$html .= '</div>';
-			$html .= '</div>';
+
 		} else {
-			$html = '<div class="dns-comparison">';
-			$html .= '<div class="dns-column">';
-			$html .= '<div class="dns-column-header">' . sprintf( __( 'Initial Snapshot (%s)', 'dns-monitor' ), esc_html( $this->format_wp_date( $snapshot->created_at ) ) ) . '</div>';
-
-			foreach ( $records as $dns_record ) {
-				$html .= '<div class="dns-record-block">';
-				$html .= '<strong>' . sprintf( __( 'Type: %s', 'dns-monitor' ), esc_html( $dns_record['type'] ) ) . '</strong><br>';
-
-				foreach ( $dns_record as $key => $value ) {
-					if ( in_array( $key, $ignore_keys ) ) {
-						continue;
-					}
-
-					if ( 'type' !== $key ) {
-						$html .= '<strong>' . esc_html( $key ) . ':</strong> ' . esc_html( is_array( $value ) ? wp_json_encode( $value ) : $value ) . '<br>';
-					}
-				}
-				$html .= '</div>';
-			}
-
+			// Initial snapshot - show all records without comparison
+			$html = '<div class="dns-initial-snapshot">';
+			$html .= '<div class="dns-records-container">';
+			
+			// For initial snapshots, create empty changes array and show all records as unchanged
+			$empty_changes = array( 'added' => array(), 'removed' => array(), 'modified' => array() );
+			$html .= $this->render_unified_records_list( $records, array(), $empty_changes, $db );
 			$html .= '</div>';
 			$html .= '</div>';
 		}
@@ -514,42 +501,144 @@ class DNS_Monitor_API {
 		$html .= '</div>';
 		$html .= '<div class="dns-monitor-card-body">';
 
-		if ( $previous_records && $snapshot->changes_detected ) {
-			$html .= $this->render_records_comparison( $records, $previous_records );
-		} else {
-			$html .= $this->render_records_list( $records );
+		$html .= $this->render_records_list( $records );
+
+		$html .= '</div>';
+		$html .= '</div>';
+
+		return $html;
+	}
+
+	/**
+	 * Render unified records list with change indicators
+	 *
+	 * @param array $current_records Current snapshot records.
+	 * @param array $previous_records Previous snapshot records.
+	 * @param array $changes Change analysis array.
+	 * @param DNS_Monitor_DB $db Database instance.
+	 * @return string HTML list.
+	 */
+	private function render_unified_records_list( $current_records, $previous_records, $changes, $db ) {
+		if ( empty( $current_records ) && empty( $previous_records ) ) {
+			return '<p>' . esc_html__( 'No records found.', 'dns-monitor' ) . '</p>';
 		}
 
-		$html .= '</div>';
+		$html = '<div class="dns-records-list dns-records-unified">';
+		
+		// Create a comprehensive list of all records with their status
+		$unified_records = array();
+		
+		// Add current records (unchanged, added, or modified)
+		foreach ( $current_records as $record ) {
+			$record_key = $db->get_record_key_without_ttl( $record );
+			$status = 'unchanged';
+			$original_record = null;
+			
+			// Check if this record was added
+			foreach ( $changes['added'] as $added_change ) {
+				if ( $db->get_record_key_without_ttl( $added_change['record'] ) === $record_key ) {
+					$status = 'added';
+					break;
+				}
+			}
+			
+			// Check if this record was modified
+			if ( $status === 'unchanged' ) {
+				foreach ( $changes['modified'] as $modified_change ) {
+					if ( $db->get_record_key_without_ttl( $modified_change['record'] ) === $record_key ) {
+						$status = 'modified';
+						$original_record = $modified_change['original'];
+						break;
+					}
+				}
+			}
+			
+			$unified_records[] = array(
+				'record' => $record,
+				'original' => $original_record,
+				'status' => $status,
+				'sort_key' => $record['type'] . '_' . $record['host'] . '_current'
+			);
+		}
+		
+		// Add removed records
+		foreach ( $changes['removed'] as $removed_change ) {
+			$unified_records[] = array(
+				'record' => $removed_change['record'],
+				'original' => null,
+				'status' => 'removed',
+				'sort_key' => $removed_change['record']['type'] . '_' . $removed_change['record']['host'] . '_removed'
+			);
+		}
+		
+		// Sort records by type and host for consistent display
+		usort( $unified_records, function( $a, $b ) {
+			return strcmp( $a['sort_key'], $b['sort_key'] );
+		});
+		
+		// Render each record with appropriate styling
+		foreach ( $unified_records as $unified_record ) {
+			$record = $unified_record['record'];
+			$status = $unified_record['status'];
+			$original = $unified_record['original'];
+			
+			$html .= '<div class="dns-record-block dns-record-' . esc_attr( $status ) . '">';
+			
+			// Record content
+			$html .= '<div class="dns-record-content">';
+			$html .= '<div class="dns-record-main">';
+			$html .= '<span class="dns-record-type">' . esc_html( strtoupper( $record['type'] ?? 'Unknown' ) ) . '</span>';
+			$html .= '<span class="dns-record-host">' . esc_html( $record['host'] ?? '' ) . '</span>';
+			$html .= '<span class="dns-record-value">' . esc_html( $this->get_dns_record_display_value( $record ) ) . '</span>';
+			$html .= '</div>';
+			
+			// Show original value for modified records
+			if ( $status === 'modified' && $original ) {
+				$html .= '<div class="dns-record-original">';
+				$html .= '<span class="dns-record-original-label">' . esc_html__( 'Previous:', 'dns-monitor' ) . '</span>';
+				$html .= '<span class="dns-record-original-value">' . esc_html( $this->get_dns_record_display_value( $original ) ) . '</span>';
+				$html .= '</div>';
+			}
+			
+			$html .= '</div>'; // End record content
+			$html .= '</div>'; // End record block
+		}
+		
 		$html .= '</div>';
 
 		return $html;
 	}
 
 	/**
-	 * Render records comparison
+	 * Get display value for a DNS record based on its type
 	 *
-	 * @param array $current_records Current records.
-	 * @param array $previous_records Previous records.
-	 * @return string HTML comparison.
+	 * @param array $record DNS record.
+	 * @return string Display value for the record.
 	 */
-	private function render_records_comparison( $current_records, $previous_records ) {
-		$html = '<div class="dns-comparison">';
-		$html .= '<div class="dns-column">';
-		$html .= '<h4>' . esc_html__( 'Previous Records', 'dns-monitor' ) . '</h4>';
-		$html .= $this->render_records_list( $previous_records, 'previous' );
-		$html .= '</div>';
-		$html .= '<div class="dns-column">';
-		$html .= '<h4>' . esc_html__( 'Current Records', 'dns-monitor' ) . '</h4>';
-		$html .= $this->render_records_list( $current_records, 'current' );
-		$html .= '</div>';
-		$html .= '</div>';
-
-		return $html;
+	private function get_dns_record_display_value( $record ) {
+		switch ( $record['type'] ?? '' ) {
+			case 'A':
+				return $record['ip'] ?? '';
+			case 'AAAA':
+				return $record['ipv6'] ?? '';
+			case 'CNAME':
+			case 'NS':
+			case 'PTR':
+				return $record['target'] ?? '';
+			case 'MX':
+				$pri = $record['pri'] ?? '';
+				$target = $record['target'] ?? '';
+				return $pri . ' ' . $target;
+			case 'TXT':
+				$txt = $record['txt'] ?? '';
+				return is_array( $txt ) ? implode( ' ', $txt ) : $txt;
+			default:
+				return $record['target'] ?? $record['ip'] ?? $record['ipv6'] ?? '';
+		}
 	}
 
 	/**
-	 * Render records list
+	 * Render records list (legacy method for backward compatibility)
 	 *
 	 * @param array $records DNS records.
 	 * @param string $context Context for styling (current, previous, or empty).
@@ -564,20 +653,32 @@ class DNS_Monitor_API {
 		
 		foreach ( $records as $record ) {
 			$html .= '<div class="dns-record-block">';
-			$html .= '<strong>' . esc_html( strtoupper( $record['type'] ?? 'Unknown' ) ) . '</strong> ';
-			$html .= esc_html( $record['host'] ?? '' ) . ' → ';
-			$html .= esc_html( $record['target'] ?? $record['value'] ?? '' );
-			
-			if ( ! empty( $record['ttl'] ) ) {
-				$html .= ' <em>(TTL: ' . esc_html( $record['ttl'] ) . ')</em>';
-			}
-			
+			$html .= '<span class="type">' . esc_html( strtoupper( $record['type'] ?? 'Unknown' ) ) . '</span>';
+			$html .= '<span class="host">' . esc_html( $record['host'] ?? '' ) . '</span>';
+			$html .= '<span class="value">' . esc_html( $this->get_dns_record_display_value( $record ) ) . '</span>';
 			$html .= '</div>';
 		}
 		
 		$html .= '</div>';
 
 		return $html;
+	}
+
+	/**
+	 * Get records for a snapshot from the dns_records table
+	 *
+	 * @param int $snapshot_id Snapshot ID.
+	 * @param DNS_Monitor_DB $db Database instance.
+	 * @return array|false DNS records array or false on failure.
+	 */
+	private function get_records_for_snapshot( $snapshot_id, $db ) {
+		$db_records = $db->get_snapshot_records( $snapshot_id );
+		if ( $db_records === false ) {
+			return false;
+		}
+
+		// Convert database records back to DNS record format
+		return $db->convert_db_records_to_dns_format( $db_records );
 	}
 
 	/**

@@ -14,13 +14,28 @@
 		init: function() {
 			this.initializeToggleRecords();
 			this.initializeHTMXIntegration();
+			this.initializeChangesDropdown();
 			this.bindEvents();
 		},
 
 		// Initialize toggle records functionality
 		initializeToggleRecords: function() {
 			$( document ).off( 'click', '.dns-toggle-records' );
+			$( document ).off( 'keydown', '.dns-toggle-records' );
 			$( document ).on( 'click', '.dns-toggle-records', this.handleToggleRecords.bind( this ) );
+			$( document ).on( 'keydown', '.dns-toggle-records', this.handleToggleRecordsKeydown.bind( this ) );
+		},
+
+		// Initialize changes dropdown functionality
+		initializeChangesDropdown: function() {
+			$( document ).off( 'change', '.dns-changes-dropdown' );
+			$( document ).on( 'change', '.dns-changes-dropdown', this.handleChangesDropdown.bind( this ) );
+			
+			// Ensure all dropdown details are hidden by default
+			$( '.dns-change-details' ).removeClass( 'dns-change-details-visible' ).hide();
+			
+			// Reset all dropdown selections to default
+			$( '.dns-changes-dropdown' ).val( '' );
 		},
 
 		// Initialize HTMX integration
@@ -44,6 +59,7 @@
 		onHTMXContentUpdated: function( event, target ) {
 			// Re-initialize toggle functionality for new content
 			this.initializeToggleRecords();
+			this.initializeChangesDropdown();
 			
 			// Show success message if DNS check completed
 			var $notifications = $( target ).find( '.dns-monitor-notification' );
@@ -70,6 +86,15 @@
 			}
 		},
 
+		// Handle keyboard events for toggle records
+		handleToggleRecordsKeydown: function( e ) {
+			// Only handle Enter (13) and Space (32) keys
+			if ( e.which === 13 || e.which === 32 ) {
+				e.preventDefault();
+				this.handleToggleRecords( e );
+			}
+		},
+
 		// Toggle records handler
 		handleToggleRecords: function( e ) {
 			e.preventDefault();
@@ -78,50 +103,57 @@
 			var recordId = $this.data( 'record-id' );
 			var $content = $( '#dns-record-content-' + recordId );
 			var $icon = $this.find( '.dashicons' );
+			var $card = $this.closest( '.dns-snapshot-card' );
 
 			// Check if this panel is already open
-			var isThisPanelOpen = $content.is( ':visible' );
+			var isThisPanelOpen = $card.hasClass( 'dns-card-expanded' );
 
 			// Close other open panels
 			if ( this.currentOpenPanel && this.currentOpenPanel.get( 0 ) !== $content.get( 0 ) ) {
-				this.currentOpenPanel.slideUp( 200 );
-
-				// Reset the previous toggle button
+				// Reset the previous toggle header and card
 				if ( this.currentOpenToggle ) {
 					this.currentOpenToggle.find( '.dashicons' )
 						.removeClass( 'dashicons-arrow-down' )
 						.addClass( 'dashicons-arrow-right' );
 					this.currentOpenToggle.attr( 'aria-expanded', 'false' );
-					this.currentOpenToggle.find( '.toggle-text' ).text( 'View Records' );
+					
+					// Remove expanded class from previous card
+					this.currentOpenToggle.closest( '.dns-snapshot-card' ).removeClass( 'dns-card-expanded' );
 				}
 			}
 
 			// Toggle the clicked panel
-			var self = this;
-			$content.slideToggle( 300, function() {
-				var isVisible = $content.is( ':visible' );
+			if ( isThisPanelOpen ) {
+				// Close this panel
+				$icon.removeClass( 'dashicons-arrow-down' ).addClass( 'dashicons-arrow-right' );
+				$this.attr( 'aria-expanded', 'false' );
+				$card.removeClass( 'dns-card-expanded' );
 
-				if ( isVisible ) {
-					$icon.removeClass( 'dashicons-arrow-right' ).addClass( 'dashicons-arrow-down' );
-					$this.attr( 'aria-expanded', 'true' );
-
-					self.currentOpenPanel = $content;
-					self.currentOpenToggle = $this;
-				} else {
-					$icon.removeClass( 'dashicons-arrow-down' ).addClass( 'dashicons-arrow-right' );
-					$this.attr( 'aria-expanded', 'false' );
-
-					self.currentOpenPanel = null;
-					self.currentOpenToggle = null;
-				}
-			} );
-
-			// Update the text
-			var $text = $this.find( '.toggle-text' );
-			if ( ! isThisPanelOpen ) {
-				$text.text( 'Hide Records' );
+				this.currentOpenPanel = null;
+				this.currentOpenToggle = null;
 			} else {
-				$text.text( 'View Records' );
+				// Open this panel
+				$icon.removeClass( 'dashicons-arrow-right' ).addClass( 'dashicons-arrow-down' );
+				$this.attr( 'aria-expanded', 'true' );
+				$card.addClass( 'dns-card-expanded' );
+
+				this.currentOpenPanel = $content;
+				this.currentOpenToggle = $this;
+			}
+		},
+
+		// Handle changes dropdown selection
+		handleChangesDropdown: function( e ) {
+			var $dropdown = $( e.currentTarget );
+			var selectedValue = $dropdown.val();
+			var $container = $dropdown.closest( '.dns-changes-dropdown-container' );
+			
+			// Hide all change details first
+			$container.find( '.dns-change-details' ).removeClass( 'dns-change-details-visible' ).hide();
+			
+			// Only show selected change details if a value is selected
+			if ( selectedValue && selectedValue !== '' ) {
+				$container.find( '.dns-change-details[data-change-type="' + selectedValue + '"]' ).addClass( 'dns-change-details-visible' ).show();
 			}
 		},
 

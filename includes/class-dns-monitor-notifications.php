@@ -195,24 +195,6 @@ class DNS_Monitor_Notifications {
 				}
 				break;
 
-			case 'SRV':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				$key_parts[] = isset( $record['port'] ) ? $record['port'] : '';
-				$key_parts[] = isset( $record['pri'] ) ? $record['pri'] : '';
-				$key_parts[] = isset( $record['weight'] ) ? $record['weight'] : '';
-				break;
-
-			case 'SOA':
-				$key_parts[] = isset( $record['mname'] ) ? $record['mname'] : '';
-				$key_parts[] = isset( $record['rname'] ) ? $record['rname'] : '';
-				break;
-
-			case 'CAA':
-				$key_parts[] = isset( $record['flags'] ) ? $record['flags'] : '';
-				$key_parts[] = isset( $record['tag'] ) ? $record['tag'] : '';
-				$key_parts[] = isset( $record['value'] ) ? $record['value'] : '';
-				break;
-
 			default:
 				// For unknown record types, include all fields except type, host, and ttl.
 				$other_fields = array();
@@ -273,24 +255,6 @@ class DNS_Monitor_Notifications {
 				}
 				break;
 
-			case 'SRV':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				$key_parts[] = isset( $record['port'] ) ? $record['port'] : '';
-				$key_parts[] = isset( $record['pri'] ) ? $record['pri'] : '';
-				$key_parts[] = isset( $record['weight'] ) ? $record['weight'] : '';
-				break;
-
-			case 'SOA':
-				$key_parts[] = isset( $record['mname'] ) ? $record['mname'] : '';
-				$key_parts[] = isset( $record['rname'] ) ? $record['rname'] : '';
-				break;
-
-			case 'CAA':
-				$key_parts[] = isset( $record['flags'] ) ? $record['flags'] : '';
-				$key_parts[] = isset( $record['tag'] ) ? $record['tag'] : '';
-				$key_parts[] = isset( $record['value'] ) ? $record['value'] : '';
-				break;
-
 			default:
 				// For unknown record types, include all fields except type and host.
 				$other_fields = array();
@@ -321,34 +285,28 @@ class DNS_Monitor_Notifications {
 			case 'A':
 				$ip = isset( $record['ip'] ) ? $record['ip'] : '';
 				return "A Record: {$ip}";
+			
 			case 'AAAA':
 				$ipv6 = isset( $record['ipv6'] ) ? $record['ipv6'] : '';
 				return "AAAA Record: {$ipv6}";
+			
 			case 'CNAME':
 				$target = isset( $record['target'] ) ? $record['target'] : '';
 				return "CNAME Record: {$target}";
+			
 			case 'MX':
 				$target = isset( $record['target'] ) ? $record['target'] : '';
 				$priority = isset( $record['pri'] ) ? $record['pri'] : '';
 				return "MX Record: {$target} (priority: {$priority})";
+			
 			case 'TXT':
 				$txt = isset( $record['txt'] ) ? ( is_array( $record['txt'] ) ? implode( ' ', $record['txt'] ) : $record['txt'] ) : '';
 				return "TXT Record: \"{$txt}\"";
+				
 			case 'NS':
 				$target = isset( $record['target'] ) ? $record['target'] : '';
 				return "NS Record: {$target}";
-			case 'SOA':
-				$mname = isset( $record['mname'] ) ? $record['mname'] : '';
-				return "SOA Record: {$mname}";
-			case 'PTR':
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				return "PTR Record: {$target}";
-			case 'SRV':
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				$port = isset( $record['port'] ) ? $record['port'] : '';
-				$priority = isset( $record['pri'] ) ? $record['pri'] : '';
-				$weight = isset( $record['weight'] ) ? $record['weight'] : '';
-				return "SRV Record: {$target}:{$port} (priority: {$priority}, weight: {$weight})";
+
 			default:
 				// Fallback for unknown record types.
 				$details = array();
