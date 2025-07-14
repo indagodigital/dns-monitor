@@ -9,6 +9,9 @@
 		// Track the currently open record panel
 		currentOpenPanel: null,
 		currentOpenToggle: null,
+		
+		// Track if a DNS check was just performed
+		dnsCheckPerformed: false,
 
 		// Initialize everything
 		init: function() {
@@ -72,17 +75,95 @@
 				// Scroll to updated content if it's below the fold
 				target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 			}
+
+			// Flash the first snapshot card when snapshots list is reloaded after DNS check
+			if ( this.dnsCheckPerformed && ( target.id === 'dns-snapshots-container' || $( target ).find( '#dns-monitor-snapshots-list' ).length > 0 ) ) {
+				this.flashFirstSnapshotCard();
+				this.dnsCheckPerformed = false; // Reset the flag
+			}
 		},
 
 		// Handle HTMX after request specifically for refresh detection
 		onHTMXAfterRequestForRefresh: function( evt ) {
-			// Only handle successful requests to the dns_check endpoint
-			if ( evt.detail.successful && evt.target.hasAttribute && evt.target.hasAttribute( 'hx-post' ) ) {
+			// Only handle requests to the dns_check endpoint
+			if ( evt.target.hasAttribute && evt.target.hasAttribute( 'hx-post' ) ) {
 				var postUrl = evt.target.getAttribute( 'hx-post' );
 				if ( postUrl && postUrl.includes( 'endpoint=dns_check' ) ) {
-					// Wait a moment for the database to update, then refresh
-					setTimeout( this.refreshSnapshots.bind( this ), 1000 );
+					// Determine success/failure based on response content, not just HTTP status
+					var isSuccess = this.isDnsCheckSuccessful( evt );
+					
+					// Show status notification based on actual DNS check result
+					this.showStatusNotification( isSuccess );
+					
+					// If successful, mark that a DNS check was performed and refresh
+					if ( isSuccess ) {
+						this.dnsCheckPerformed = true; // Set flag to trigger flash animation
+						this.refreshSnapshots();
+					}
 				}
+			}
+		},
+
+		// Determine if DNS check was successful based on response content
+		isDnsCheckSuccessful: function( evt ) {
+			// If HTTP request failed, it's definitely not successful
+			if ( ! evt.detail.successful ) {
+				return false;
+			}
+			
+			// Check the response content for error indicators
+			var responseText = evt.detail.xhr.responseText;
+			if ( responseText ) {
+				// Look for error notification in the response
+				if ( responseText.includes( 'notice-error' ) ) {
+					return false;
+				}
+				// Success or warning notifications indicate successful DNS check
+				if ( responseText.includes( 'notice-success' ) || responseText.includes( 'notice-warning' ) ) {
+					return true;
+				}
+			}
+			
+			// Default to successful if HTTP request succeeded and no error indicators found
+			return true;
+		},
+
+		// Show status notification for DNS check
+		showStatusNotification: function( isSuccess ) {
+			var $statusContainer = $( '.dns-monitor-status' );
+			var $successElement = $statusContainer.find( '.dns-status-success' );
+			var $errorElement = $statusContainer.find( '.dns-status-error' );
+
+			$successElement.removeClass( 'dns-status-show' );
+			$errorElement.removeClass( 'dns-status-show' );
+			
+			// Show appropriate notification
+			var $targetElement = isSuccess ? $successElement : $errorElement;
+			
+			// Force reflow to ensure the class removal takes effect
+			$targetElement[0].offsetHeight;
+
+			$targetElement.addClass( 'dns-status-show' );
+
+			setTimeout( function() {
+				$targetElement.removeClass( 'dns-status-show' );
+			}, 5000 );
+		},
+
+		// Flash the first snapshot card to draw attention
+		flashFirstSnapshotCard: function() {
+			var $firstCard = $( '.dns-snapshot-card' ).first();
+			
+			if ( $firstCard.length > 0 ) {
+				$firstCard.removeClass( 'dns-card-flash' );
+				
+				// Force reflow to ensure the class removal takes effect
+				$firstCard[0].offsetHeight;
+				$firstCard.addClass( 'dns-card-flash' );
+
+				setTimeout( function() {
+					$firstCard.removeClass( 'dns-card-flash' );
+				}, 2000 );
 			}
 		},
 

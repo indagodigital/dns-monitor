@@ -129,30 +129,36 @@ class DNS_Monitor_Admin {
 		?>
 		<div class="wrap">
 			<div class="dns-monitor-header">
-				<div class="dns-monitor-logo-group">
+				
+				<div class="dns-monitor-branding">
 					<img src="<?php echo DNS_MONITOR_PLUGIN_URL . 'assets/img/dns-monitor-logo.svg'; ?>" alt="DNS Monitor Logo" class="dns-monitor-logo">
 					<h1 class="dns-monitor-title">DNS Monitor</h1>
 				</div>
+
+				<div class="dns-monitor-status">
+					<span class="dns-status-success">DNS Check Complete!</span>
+					<span class="dns-status-error">DNS Check Failed!</span>
+				</div>
+				
 				<div class="dns-monitor-button-group">
+					
 					<?php if ( $domain ) : ?>
 						<?php echo $this->admin_htmx->render_dns_check_button(); ?>
 					<?php endif; ?>
 				</div>
+
 			</div>
 
 			<!-- HTMX-enabled Snapshots Table -->
 			<div id="dns-snapshots-container">
-				<?php echo $this->admin_htmx->render_snapshots_table( array(
-					'auto_refresh' => false,
-					'refresh_interval' => 60000, // 60 seconds
-				) ); ?>
+				<?php echo $this->admin_htmx->render_snapshots_table(); ?>
 			</div>
 
 			<!-- DNS Check Results Area -->
 			<div id="dns-check-results" class="dns-monitor-results-area" style="display: none;"></div>
 
 			<!-- Global notification area for HTMX responses -->
-			<div id="dns-monitor-notifications" class="dns-monitor-notifications"></div>
+			<div id="dns-monitor-notifications" class="dns-monitor-notifications" style="display: none;"></div>
 		</div>
 		<?php
 	}

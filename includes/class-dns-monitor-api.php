@@ -143,7 +143,7 @@ class DNS_Monitor_API {
 					'total_records' => count( $result['records'] ?? array() ),
 					'last_check' => current_time( 'mysql' ),
 					'domain' => $domain,
-					'refresh_snapshots' => true, // Signal to refresh the snapshots table
+					'refresh_snapshots' => true,
 				);
 
 				// Add snapshot info if available

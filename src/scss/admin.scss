@@ -23,7 +23,7 @@
 	font-weight: 900;
 }
 
-@keyframes dns-notification-slide-in {
+@keyframes dns-slide-in {
 	from {
 		transform: translateX(100%);
 		opacity: 0;
@@ -31,6 +31,15 @@
 	to {
 		transform: translateX(0);
 		opacity: 1;
+	}
+}
+
+@keyframes dns-card-flash {
+	0%, 50%, 100% {
+		background-color: transparent;
+	}
+	25%, 75% {
+		background-color: $color-brand-accent;
 	}
 }
 
@@ -71,10 +80,12 @@ body {
 /* Admin Header */ 
 .dns-monitor-header {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	align-items: center;
+	gap: 20px;
 
-	.dns-monitor-logo-group {
+	.dns-monitor-branding {
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -100,10 +111,67 @@ body {
 		}
 	}
 
+	.dns-monitor-status {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		margin-left: auto;
+
+		@media (max-width: 1239px) {
+			align-items: center;
+			margin: 1em 0;
+			order: 3;
+			width: 100%;
+		}
+
+		.dns-status-success {
+			color: $color-success;
+
+			&:before {
+				background-image: url('../img/dns-monitor-success.svg');
+			}
+		}
+
+		.dns-status-error {
+			color: $color-error;
+
+			&:before {
+				background-image: url('../img/dns-monitor-error.svg');
+			}
+		}
+
+		.dns-status-success,
+		.dns-status-error {
+			display: flex;
+			align-items: center;
+			font-size: 1.125rem;
+			gap: 0.5em;
+			opacity: 0;
+			transition: opacity 0.3s ease-in-out;
+			width: max-content;
+			height: 0px;
+			overflow: visible;
+
+			&.dns-status-show {
+				opacity: 1;
+			}
+
+			&:before {
+				aspect-ratio: 1/1;
+				content: '';
+				background-size: contain;
+				background-repeat: no-repeat;
+				background-position: center;
+				display: inline-block;
+				height: 1em;
+			}
+		}
+	}
+
 	.dns-monitor-button-group {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: 20px;
 
 		.dns-monitor-button {
 			background-color: $color-brand-accent;
@@ -119,11 +187,16 @@ body {
 			line-height: 1;
 			padding: 1em 2.5em;
 			text-transform: uppercase;
-			transition: background-color 0.3s ease;
+			transition: all 0.3s ease;
 			min-width: max-content;
 
 			&:hover {
-				background-color: darken($color-brand-accent, 10%);
+				background-color: $color-brand-secondary;
+				color: white;
+
+				&:before {
+					filter: brightness(0) invert(1);
+				}
 			}
 
 			&:before {
@@ -135,6 +208,7 @@ body {
 				background-position: center;
 				display: inline-block;
 				height: 1em;
+				transition: all 0.3s ease;
 			}
 
 			&.htmx-request:before {
@@ -192,7 +266,7 @@ body {
 	padding: 10px 15px;
 	border-radius: 4px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	animation: dns-notification-slide-in 0.3s ease;
+	animation: dns-slide-in 0.3s ease;
 	transition: opacity 0.3s ease;
 }
 
@@ -238,6 +312,10 @@ button.dns-monitor-loading {
 	&:hover,
 	&.dns-card-expanded {
 		border-color: $color-brand-darkgray;
+	}
+
+	&.dns-card-flash {
+		animation: dns-card-flash 1s ease-in-out infinite;
 	}
 }
 
