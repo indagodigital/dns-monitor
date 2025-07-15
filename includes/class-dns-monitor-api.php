@@ -610,8 +610,7 @@ class DNS_Monitor_API {
 		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
-			$snapshots_html = '<div id="dns-snapshots-container" hx-swap-oob="true">' . $this->handle_refresh_snapshots( [] ) . '</div>';
-			return $snapshots_html;
+			return $this->handle_refresh_snapshots( [] );
 		}
 
 		// Fallback for non-oob, though it's not really used for notifications anymore
@@ -629,8 +628,7 @@ class DNS_Monitor_API {
 		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
-			$snapshots_html = '<div id="dns-snapshots-container" hx-swap-oob="true">' . $this->handle_refresh_snapshots( [] ) . '</div>';
-			return $snapshots_html;
+			return $this->handle_refresh_snapshots( [] );
 		}
 
 		// Fallback for non-oob
