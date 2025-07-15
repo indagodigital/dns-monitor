@@ -606,16 +606,16 @@ class DNS_Monitor_API {
 	 * @return string HTML response.
 	 */
 	private function success_response( $message, $data = array(), $status = 'success', $oob_swap = false ) {
-		$notification_html = '<div id="dns-monitor-notification" hx-swap-oob="true" class="dns-monitor-notification notice notice-' . esc_attr( $status ) . '">';
-		$notification_html .= '<p>' . esc_html( $message ) . '</p>';
-		$notification_html .= '</div>';
+		header( 'X-DNS-Monitor-Status: ' . esc_attr( $status ) );
+		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
 			$snapshots_html = '<div id="dns-snapshots-container" hx-swap-oob="true">' . $this->handle_refresh_snapshots( [] ) . '</div>';
-			return $notification_html . $snapshots_html;
+			return $snapshots_html;
 		}
 
-		return $notification_html;
+		// Fallback for non-oob, though it's not really used for notifications anymore
+		return '<div class="notice notice-' . esc_attr( $status ) . '"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	/**
@@ -625,16 +625,16 @@ class DNS_Monitor_API {
 	 * @return string HTML response.
 	 */
 	private function error_response( $message, $oob_swap = false ) {
-		$notification_html = '<div id="dns-monitor-notification" hx-swap-oob="true" class="dns-monitor-notification notice notice-error">';
-		$notification_html .= '<p>' . esc_html( $message ) . '</p>';
-		$notification_html .= '</div>';
+		header( 'X-DNS-Monitor-Status: error' );
+		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
 			$snapshots_html = '<div id="dns-snapshots-container" hx-swap-oob="true">' . $this->handle_refresh_snapshots( [] ) . '</div>';
-			return $notification_html . $snapshots_html;
+			return $snapshots_html;
 		}
 
-		return $notification_html;
+		// Fallback for non-oob
+		return '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	/**

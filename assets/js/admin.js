@@ -39,25 +39,30 @@
 			if (evt.target.hasAttribute && evt.target.hasAttribute('hx-post')) {
 				var postUrl = evt.target.getAttribute('hx-post');
 				if (postUrl && postUrl.includes('endpoint=dns_check')) {
-					// Determine success/failure based on response content
-					var isSuccess = (evt.detail.xhr.responseText || '').indexOf('notice-error') === -1;
+					var status = evt.detail.xhr.getResponseHeader('X-DNS-Monitor-Status');
+					var message = evt.detail.xhr.getResponseHeader('X-DNS-Monitor-Message');
 
-					// Show the appropriate status notification in the header
-					this.showStatusNotification(isSuccess);
+					if (status) {
+						var isSuccess = status !== 'error';
+						this.showStatusNotification(isSuccess, decodeURIComponent(message || ''));
 
-					// If the check was processed successfully, flash the card
-					if (isSuccess) {
-						this.flashFirstSnapshotCard();
+						if (isSuccess) {
+							this.flashFirstSnapshotCard();
+						}
 					}
 				}
 			}
 		},
 
 		// Show status notification for DNS check
-		showStatusNotification: function (isSuccess) {
+		showStatusNotification: function (isSuccess, message) {
 			var $statusContainer = $('.dns-monitor-status');
 			var $successElement = $statusContainer.find('.dns-status-success');
 			var $errorElement = $statusContainer.find('.dns-status-error');
+
+			// Set the message
+			$successElement.text(message || 'DNS Check Complete!');
+			$errorElement.text(message || 'DNS Check Failed!');
 
 			$successElement.removeClass('dns-status-show');
 			$errorElement.removeClass('dns-status-show');
