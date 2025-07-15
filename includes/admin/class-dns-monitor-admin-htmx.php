@@ -57,8 +57,8 @@ class DNS_Monitor_Admin_HTMX {
 		$defaults = array(
 			'class' => 'dns-monitor-button',
 			'loading_text' => __( 'Checking DNS...', 'dns-monitor' ),
-			'target' => '#dns-monitor-notification',
-			'swap' => 'outerHTML',
+			'target' => '#dns-snapshots-container',
+			'swap' => 'innerHTML',
 			'method' => 'POST', // DNS check endpoint requires POST
 		);
 
