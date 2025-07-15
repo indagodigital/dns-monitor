@@ -43,22 +43,48 @@ class DNS_Monitor {
 	protected $api = null;
 
 	/**
+	 * DB instance
+	 *
+	 * @var DNS_Monitor_DB
+	 */
+	protected $db = null;
+
+	/**
+	 * Notifications instance
+	 *
+	 * @var DNS_Monitor_Notifications
+	 */
+	protected $notifications = null;
+
+	/**
+	 * The plugin file path
+	 *
+	 * @var string
+	 */
+	protected $plugin_file = null;
+
+	/**
 	 * Get the singleton instance of this class
 	 *
+	 * @param string $plugin_file The main plugin file path.
 	 * @return DNS_Monitor
 	 */
-	public static function get_instance() {
+	public static function get_instance( $plugin_file ) {
 		if ( null === self::$instance ) {
-			self::$instance = new self();
+			self::$instance = new self( $plugin_file );
 		}
 		return self::$instance;
 	}
 
 	/**
 	 * Constructor
+	 *
+	 * @param string $plugin_file The main plugin file path.
 	 */
-	private function __construct() {
+	private function __construct( $plugin_file ) {
+		$this->plugin_file = $plugin_file;
 		$this->includes();
+		$this->instantiate();
 		$this->init_hooks();
 	}
 
@@ -78,32 +104,35 @@ class DNS_Monitor {
 	}
 
 	/**
+	 * Instantiate classes
+	 */
+	private function instantiate() {
+		$this->db            = DNS_Monitor_DB::get_instance();
+		$this->notifications = DNS_Monitor_Notifications::get_instance();
+		$this->htmx          = DNS_Monitor_HTMX::get_instance();
+		$this->api           = DNS_Monitor_API::get_instance();
+
+		if ( is_admin() ) {
+			$this->admin = DNS_Monitor_Admin::get_instance();
+		}
+	}
+
+	/**
 	 * Initialize hooks
 	 */
 	private function init_hooks() {
-		$plugin_file = dirname( dirname( __FILE__ ) ) . '/dns-monitor.php';
-		register_activation_hook( $plugin_file, array( $this, 'activate' ) );
-		register_deactivation_hook( $plugin_file, array( $this, 'deactivate' ) );
+		register_activation_hook( $this->plugin_file, array( $this, 'activate' ) );
+		register_deactivation_hook( $this->plugin_file, array( $this, 'deactivate' ) );
 
 		// Schedule cron job.
 		add_action( 'dns_monitor_check', array( 'DNS_Monitor_Records', 'check_site_dns' ) );
-
-		// Initialize HTMX functionality.
-		$this->htmx = DNS_Monitor_HTMX::get_instance();
-		$this->api = DNS_Monitor_API::get_instance();
-
-		// Initialize admin functionality.
-		if ( is_admin() ) {
-			$this->admin = new DNS_Monitor_Admin();
-		}
 	}
 
 	/**
 	 * Plugin activation
 	 */
 	public function activate() {
-		$db = new DNS_Monitor_DB();
-		$db->create_tables();
+		$this->db->create_tables();
 
 		// Set default options if they don't exist.
 		if ( false === get_option( 'dns_monitor_delete_data_on_uninstall' ) ) {
@@ -122,8 +151,7 @@ class DNS_Monitor {
 		$this->schedule_cron();
 
 		// Send activation notification.
-		$notifications = new DNS_Monitor_Notifications();
-		$notifications->send_activation_notification( $domain );
+		$this->notifications->send_activation_notification( $domain );
 	}
 
 	/**
@@ -133,8 +161,7 @@ class DNS_Monitor {
 		$this->deactivate_cron();
 
 		// Send deactivation notification.
-		$notifications = new DNS_Monitor_Notifications();
-		$notifications->send_deactivation_notification();
+		$this->notifications->send_deactivation_notification();
 	}
 
 	/**
@@ -193,4 +220,4 @@ class DNS_Monitor {
 	public function get_admin_htmx() {
 		return DNS_Monitor_Admin_HTMX::get_instance();
 	}
-} 
+}

@@ -15,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class DNS_Monitor_Admin {
 	/**
+	 * Instance of this class
+	 *
+	 * @var DNS_Monitor_Admin
+	 */
+	protected static $instance = null;
+
+	/**
 	 * Admin HTMX helper instance
 	 *
 	 * @var DNS_Monitor_Admin_HTMX
@@ -24,7 +31,7 @@ class DNS_Monitor_Admin {
 	/**
 	 * Constructor
 	 */
-	public function __construct() {
+	private function __construct() {
 		add_action( 'admin_menu', array( $this, 'register_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_action( 'admin_init', array( $this, 'handle_admin_actions' ) );
@@ -35,6 +42,18 @@ class DNS_Monitor_Admin {
 		
 		// Initialize HTMX helper
 		$this->admin_htmx = DNS_Monitor_Admin_HTMX::get_instance();
+	}
+
+	/**
+	 * Get the singleton instance of this class
+	 *
+	 * @return DNS_Monitor_Admin
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
 	}
 
 	/**

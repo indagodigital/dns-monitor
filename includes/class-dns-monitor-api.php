@@ -185,21 +185,16 @@ class DNS_Monitor_API {
 	 * @return string HTML response.
 	 */
 	public function handle_refresh_snapshots( $request ) {
-		$db = new DNS_Monitor_DB();
+		$db   = DNS_Monitor_DB::get_instance();
 		$page = max( 1, intval( $request['page'] ?? 1 ) );
 		$per_page = max( 1, min( 100, intval( $request['per_page'] ?? 20 ) ) );
 		$unified_view = isset( $request['unified_view'] ) && $request['unified_view'];
 
 		$snapshots = $db->get_snapshots( $page, $per_page );
 
-		if ( empty( $snapshots ) ) {
-			return '<div class="dns-monitor-content-loading">' . 
-				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
-				   '</div>';
-		}
-
-		$html = $this->render_snapshots_list( $snapshots, $db, $unified_view );
-		return $html;
+		ob_start();
+		include DNS_MONITOR_PLUGIN_DIR . 'includes/admin/views/snapshots-list.php';
+		return ob_get_clean();
 	}
 
 	/**
@@ -246,7 +241,7 @@ class DNS_Monitor_API {
 			return array( 'error' => __( 'Invalid snapshot ID.', 'dns-monitor' ) );
 		}
 
-		$db = new DNS_Monitor_DB();
+		$db = DNS_Monitor_DB::get_instance();
 		$deleted = $db->delete_snapshot( $snapshot_id );
 
 		if ( $deleted ) {
@@ -268,82 +263,9 @@ class DNS_Monitor_API {
 	 * @return string HTML table.
 	 */
 	private function render_snapshots_list( $snapshots, $db, $unified_view = true ) {
-		if ( empty( $snapshots ) ) {
-			return '<div class="dns-monitor-content-loading">' . 
-				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
-				   '</div>';
-		}
-
-		$html = '<div id="dns-monitor-snapshots-list" class="dns-snapshots-list">';
-
-		// Limit to 10 snapshots using a for loop to maintain proper previous snapshot references
-		$total_snapshots = count( $snapshots );
-		$max_snapshots = min( 10, $total_snapshots );
-		
-		for ( $index = 0; $index < $max_snapshots; $index++ ) {
-			$snapshot = $snapshots[ $index ];
-			
-			// Get records from the dns_records table instead of JSON data
-			$records = $this->get_records_for_snapshot( $snapshot->ID, $db );
-			if ( $records === false ) {
-				continue; // Skip snapshots with no records
-			}
-
-			// Get the changes breakdown from the database
-			$changes_count = isset( $snapshot->snapshot_changes ) ? intval( $snapshot->snapshot_changes ) : 0;
-			$additions = isset( $snapshot->snapshot_additions ) ? intval( $snapshot->snapshot_additions ) : 0;
-			$removals = isset( $snapshot->snapshot_removals ) ? intval( $snapshot->snapshot_removals ) : 0;
-			$modifications = isset( $snapshot->snapshot_modifications ) ? intval( $snapshot->snapshot_modifications ) : 0;
-			
-			// Get the previous record for comparison (for display purposes)
-			$previous_record = null;
-			$previous_records = array();
-			if ( $index < $total_snapshots - 1 ) {
-				$previous_record = $snapshots[ $index + 1 ];
-				$previous_records = $this->get_records_for_snapshot( $previous_record->ID, $db );
-				if ( $previous_records === false ) {
-					$previous_records = array(); // Handle missing data gracefully
-				}
-			}
-
-			// Add CSS class for highlighting cards with changes
-			$card_class = $changes_count > 0 ? 'dns-changes-detected' : '';
-			
-			$html .= '<div class="dns-snapshot-card ' . esc_attr( $card_class ) . '" data-snapshot-id="' . esc_attr( $snapshot->ID ) . '">';
-			
-			// Card header with date and changes summary (clickable)
-			$html .= '<div class="dns-snapshot-card-header dns-toggle-records" data-record-id="' . esc_attr( $snapshot->ID ) . '" aria-expanded="false" aria-controls="dns-record-content-' . esc_attr( $snapshot->ID ) . '" role="button" tabindex="0">';
-			$html .= '<div class="dns-snapshot-info">';
-			$html .= '<div class="dns-snapshot-date">' . esc_html( $this->format_wp_date( $snapshot->created_at ) ) . '</div>';
-			
-			$html .= '<div class="dns-snapshot-badges">';
-			if ( $changes_count > 0 ) {
-				if ( $additions > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-addition" title="' . esc_attr__( 'Additions', 'dns-monitor' ) . '"></span>';
-				}
-				if ( $modifications > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-modification" title="' . esc_attr__( 'Modifications', 'dns-monitor' ) . '"></span>';
-				}
-				if ( $removals > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-removal" title="' . esc_attr__( 'Removals', 'dns-monitor' ) . '"></span>';
-				}
-			}
-			$html .= '</div>';
-			$html .= '</div>'; // End snapshot info
-			
-			$html .= '</div>'; // End card header
-			
-			// Card content (initially hidden)
-			$html .= '<div class="dns-snapshot-card-content" id="dns-record-content-' . esc_attr( $snapshot->ID ) . '">';
-			$html .= $this->render_snapshot_comparison_admin( $snapshot, $previous_record, $records, $previous_records, $db );
-			$html .= '</div>';
-			
-			$html .= '</div>'; // End card
-		}
-
-		$html .= '</div>'; // End list
-
-		return $html;
+		ob_start();
+		include DNS_MONITOR_PLUGIN_DIR . 'includes/admin/views/snapshots-list.php';
+		return ob_get_clean();
 	}
 
 	/**
@@ -930,4 +852,4 @@ class DNS_Monitor_API {
 			return array( 'error' => __( 'Failed to delete record.', 'dns-monitor' ) );
 		}
 	}
-} 
+}

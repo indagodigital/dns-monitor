@@ -26,8 +26,8 @@ class DNS_Monitor_Records {
 			return false;
 		}
 
-		$notifications = new DNS_Monitor_Notifications();
-		$result = self::fetch_and_process_records( $domain );
+		$notifications = DNS_Monitor_Notifications::get_instance();
+		$result        = self::fetch_and_process_records( $domain );
 
 		if ( ! $result ) {
 			return false;
@@ -37,7 +37,7 @@ class DNS_Monitor_Records {
 		if ( $result['changes_detected'] ) {
 			$previous_records = null;
 			if ( $result['last_record'] ) {
-				$db = new DNS_Monitor_DB();
+				$db         = DNS_Monitor_DB::get_instance();
 				$db_records = $db->get_snapshot_records( $result['last_record']->ID );
 				if ( $db_records !== false ) {
 					$previous_records = $db->convert_db_records_to_dns_format( $db_records );
@@ -58,7 +58,7 @@ class DNS_Monitor_Records {
 	 * @return array|false
 	 */
 	public static function fetch_and_process_records( $domain_name, $save_snapshot = true, $check_for_changes = true ) {
-		$db = new DNS_Monitor_DB();
+		$db = DNS_Monitor_DB::get_instance();
 
 		// Fetch DNS records.
 		$records = dns_get_record( $domain_name, DNS_A );
@@ -231,4 +231,4 @@ class DNS_Monitor_Records {
 				}
 		}
 	}
-} 
+}

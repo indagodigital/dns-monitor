@@ -38,8 +38,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-dns-monitor.php';
  * @return DNS_Monitor
  */
 function dns_monitor_init() {
-	return DNS_Monitor::get_instance();
+	return DNS_Monitor::get_instance( __FILE__ );
 }
 
 // Initialize the plugin.
-dns_monitor_init(); 
+dns_monitor_init();

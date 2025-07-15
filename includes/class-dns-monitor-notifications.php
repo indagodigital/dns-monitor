@@ -15,6 +15,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class DNS_Monitor_Notifications {
 	/**
+	 * Instance of this class
+	 *
+	 * @var DNS_Monitor_Notifications
+	 */
+	protected static $instance = null;
+
+	/**
+	 * Get the singleton instance of this class
+	 *
+	 * @return DNS_Monitor_Notifications
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
 	 * Send notification about DNS changes
 	 *
 	 * @param string $domain_name      Domain name.
@@ -404,4 +423,4 @@ class DNS_Monitor_Notifications {
 
 		return $notification_emails;
 	}
-} 
+}
