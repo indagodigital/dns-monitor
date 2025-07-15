@@ -104,20 +104,22 @@ class DNS_Monitor_API {
 		$domain   = parse_url( $site_url, PHP_URL_HOST );
 
 		if ( ! $domain ) {
-			return $this->error_response( __( 'Unable to determine domain from site URL.', 'dns-monitor' ) );
+			$error_message = __( 'Unable to determine domain from site URL.', 'dns-monitor' );
+			return $this->error_response( $error_message, true );
 		}
 
 		try {
 			$result = DNS_Monitor_Records::fetch_and_process_records( $domain, true, true );
 
 			if ( ! $result ) {
-				return $this->error_response( __( 'DNS check failed. Unable to retrieve DNS records.', 'dns-monitor' ) );
+				$error_message = __( 'DNS check failed. Unable to retrieve DNS records.', 'dns-monitor' );
+				return $this->error_response( $error_message, true );
 			}
 
 			// Check if there was a snapshot error
 			if ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) {
 				$error_message = $result['snapshot_error_message'] ?? __( 'Failed to save DNS snapshot.', 'dns-monitor' );
-				return $this->error_response( $error_message );
+				return $this->error_response( $error_message, true );
 			}
 
 			// Only show "complete" message if a snapshot was saved or changes were detected
@@ -139,23 +141,14 @@ class DNS_Monitor_API {
 
 				$status = $result['changes_detected'] ? 'warning' : 'success';
 
-				$response_data = array(
-					'changes_detected' => $result['changes_detected'],
-					'total_records'    => count( $result['records'] ?? array() ),
-					'last_check'       => current_time( 'mysql' ),
-					'domain'           => $domain,
-					'refresh_snapshots' => true,
-					'snapshot_saved'   => true,
-					'snapshot_id'      => $result['snapshot_id'] ?? null,
-				);
-
-				return $this->success_response( $message, $response_data, $status );
+				return $this->success_response( $message, [], $status, true );
 			} else {
 				// If no snapshot was saved (e.g., no changes and snapshot_behavior is not 'always')
 				return $this->success_response(
 					__( 'DNS check completed. No changes found.', 'dns-monitor' ),
 					array( 'refresh_snapshots' => false ),
-					'success'
+					'success',
+					true
 				);
 			}
 		} catch ( Exception $e ) {
@@ -164,7 +157,8 @@ class DNS_Monitor_API {
 					/* translators: %s: Error message */
 					__( 'DNS check failed: %s', 'dns-monitor' ),
 					$e->getMessage()
-				)
+				),
+				true
 			);
 		} catch ( Error $e ) {
 			return $this->error_response(
@@ -172,7 +166,8 @@ class DNS_Monitor_API {
 					/* translators: %s: Error message */
 					__( 'DNS check failed with fatal error: %s', 'dns-monitor' ),
 					$e->getMessage()
-				)
+				),
+				true
 			);
 		}
 	}
@@ -610,17 +605,17 @@ class DNS_Monitor_API {
 	 * @param string $status Status type (success, warning, etc.).
 	 * @return string HTML response.
 	 */
-	private function success_response( $message, $data = array(), $status = 'success' ) {
-		$extra_attrs = '';
-		if ( isset( $data['refresh_snapshots'] ) && $data['refresh_snapshots'] ) {
-			$extra_attrs = ' data-refresh-snapshots="true"';
+	private function success_response( $message, $data = array(), $status = 'success', $oob_swap = false ) {
+		$notification_html = '<div id="dns-monitor-notification" class="dns-monitor-notification notice notice-' . esc_attr( $status ) . '" hx-swap-oob="true">';
+		$notification_html .= '<p>' . esc_html( $message ) . '</p>';
+		$notification_html .= '</div>';
+
+		if ( $oob_swap ) {
+			$snapshots_html = $this->handle_refresh_snapshots( [] );
+			return $notification_html . $snapshots_html;
 		}
 
-		$html = '<div class="dns-monitor-notification notice notice-' . esc_attr( $status ) . '"' . $extra_attrs . '>';
-		$html .= '<p>' . esc_html( $message ) . '</p>';
-		$html .= '</div>';
-
-		return $html;
+		return $notification_html;
 	}
 
 	/**
@@ -629,8 +624,17 @@ class DNS_Monitor_API {
 	 * @param string $message Error message.
 	 * @return string HTML response.
 	 */
-	private function error_response( $message ) {
-		return '<div class="dns-monitor-notification notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+	private function error_response( $message, $oob_swap = false ) {
+		$notification_html = '<div id="dns-monitor-notification" class="dns-monitor-notification notice notice-error" hx-swap-oob="true">';
+		$notification_html .= '<p>' . esc_html( $message ) . '</p>';
+		$notification_html .= '</div>';
+
+		if ( $oob_swap ) {
+			$snapshots_html = $this->handle_refresh_snapshots( [] );
+			return $notification_html . $snapshots_html;
+		}
+
+		return $notification_html;
 	}
 
 	/**

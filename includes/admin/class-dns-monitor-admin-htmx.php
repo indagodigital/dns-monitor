@@ -57,8 +57,8 @@ class DNS_Monitor_Admin_HTMX {
 		$defaults = array(
 			'class' => 'dns-monitor-button',
 			'loading_text' => __( 'Checking DNS...', 'dns-monitor' ),
-			'target' => '#dns-check-results',
-			'swap' => 'innerHTML',
+			'target' => '#dns-monitor-notification',
+			'swap' => 'outerHTML',
 			'method' => 'POST', // DNS check endpoint requires POST
 		);
 
@@ -79,7 +79,7 @@ class DNS_Monitor_Admin_HTMX {
 	 */
 	public function render_snapshots_table( $attributes = array() ) {
 		$defaults = array(
-			'id' => 'dns-monitor-snapshots-table',
+			'id' => 'dns-monitor-snapshots-list',
 			'auto_refresh' => false,
 			'refresh_interval' => 60000, // 60 seconds
 			'unified_view' => true,
@@ -139,4 +139,4 @@ class DNS_Monitor_Admin_HTMX {
 
 		return $html;
 	}
-} 
+}

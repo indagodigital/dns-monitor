@@ -168,6 +168,9 @@ class DNS_Monitor_Admin {
 
 			</div>
 
+			<!-- Notification area for HTMX responses -->
+			<div id="dns-monitor-notification"></div>
+
 			<!-- HTMX-enabled Snapshots Table -->
 			<div id="dns-snapshots-container">
 				<?php echo $this->admin_htmx->render_snapshots_table(); ?>
