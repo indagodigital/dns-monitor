@@ -174,15 +174,15 @@ class DNS_Monitor {
 		$next_scheduled = wp_next_scheduled( 'dns_monitor_check' );
 
 		if ( ! $next_scheduled ) {
-			// No cron scheduled, create it.
-			wp_schedule_event( time(), $frequency, 'dns_monitor_check' );
+			// No cron scheduled, create it. Schedule the first run for one hour from now to avoid race conditions on activation.
+			wp_schedule_event( time() + HOUR_IN_SECONDS, $frequency, 'dns_monitor_check' );
 		} else {
 			// Cron exists, check if frequency matches.
 			$scheduled_events = wp_get_scheduled_event( 'dns_monitor_check' );
 			if ( $scheduled_events && isset( $scheduled_events->schedule ) && $scheduled_events->schedule !== $frequency ) {
 				// Frequency mismatch, reschedule.
 				wp_clear_scheduled_hook( 'dns_monitor_check' );
-				wp_schedule_event( time(), $frequency, 'dns_monitor_check' );
+				wp_schedule_event( time() + HOUR_IN_SECONDS, $frequency, 'dns_monitor_check' );
 			}
 		}
 	}
