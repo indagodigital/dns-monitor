@@ -4,6 +4,34 @@
 
 @import "variables";
 
+// ==========================================================================
+// Placeholders & Mixins
+// ==========================================================================
+
+%flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin icon-pseudo($url, $height: 1em) {
+    &::before {
+        content: "";
+        display: inline-block;
+        height: $height;
+        aspect-ratio: 1/1;
+        background-image: url($url);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transition: filter 0.3s ease;
+    }
+}
+
+// ==========================================================================
+// Fonts & Keyframes
+// ==========================================================================
+
 @font-face {
     font-family: "Montserrat";
     src: url("../fonts/Montserrat-Regular.ttf") format("truetype");
@@ -55,6 +83,10 @@
     }
 }
 
+// ==========================================================================
+// Base Styles
+// ==========================================================================
+
 body {
     background-color: white;
     color: $color-text;
@@ -80,7 +112,10 @@ body {
     }
 }
 
-/* Admin Header */
+// ==========================================================================
+// Header
+// ==========================================================================
+
 .dns-monitor-header {
     display: flex;
     flex-wrap: wrap;
@@ -127,22 +162,6 @@ body {
             width: 100%;
         }
 
-        .dns-status-success {
-            color: $color-success;
-
-            &:before {
-                background-image: url("../img/dns-monitor-success.svg");
-            }
-        }
-
-        .dns-status-error {
-            color: $color-error;
-
-            &:before {
-                background-image: url("../img/dns-monitor-error.svg");
-            }
-        }
-
         .dns-status-success,
         .dns-status-error {
             display: flex;
@@ -152,22 +171,22 @@ body {
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
             width: max-content;
-            height: 0px;
+            height: 0;
             overflow: visible;
 
             &.dns-status-show {
                 opacity: 1;
             }
+        }
 
-            &:before {
-                aspect-ratio: 1/1;
-                content: "";
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                display: inline-block;
-                height: 1em;
-            }
+        .dns-status-success {
+            color: $color-success;
+            @include icon-pseudo("../img/dns-monitor-success.svg");
+        }
+
+        .dns-status-error {
+            color: $color-error;
+            @include icon-pseudo("../img/dns-monitor-error.svg");
         }
     }
 
@@ -190,31 +209,20 @@ body {
             line-height: 1;
             padding: 1em 2.5em;
             text-transform: uppercase;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
             min-width: max-content;
+            @include icon-pseudo("../img/dns-monitor-refresh.svg");
 
             &:hover {
                 background-color: $color-brand-secondary;
                 color: white;
 
-                &:before {
+                &::before {
                     filter: brightness(0) invert(1);
                 }
             }
 
-            &:before {
-                aspect-ratio: 1/1;
-                content: "";
-                background-image: url("../img/dns-monitor-refresh.svg");
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                display: inline-block;
-                height: 1em;
-                transition: all 0.3s ease;
-            }
-
-            &.htmx-request:before {
+            &.htmx-request::before {
                 animation: dns-spinner 1s linear infinite;
             }
 
@@ -226,7 +234,10 @@ body {
     }
 }
 
-/* Loading states */
+// ==========================================================================
+// Loading & Notifications
+// ==========================================================================
+
 .dns-monitor-loading {
     position: relative;
     opacity: 0.7;
@@ -238,15 +249,13 @@ body {
 }
 
 .dns-monitor-loading-overlay {
+    @extend %flex-center;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 10;
 
     .spinner {
@@ -255,7 +264,6 @@ body {
     }
 }
 
-/* HTMX Notifications */
 .dns-monitor-notifications {
     position: fixed;
     bottom: 20px;
@@ -273,27 +281,16 @@ body {
     transition: opacity 0.3s ease;
 }
 
-/* HTMX Button Loading States */
-button.dns-monitor-loading {
-    cursor: wait;
-
-    .spinner {
-        margin-left: 5px;
-        float: none;
-        display: inline-block;
-        vertical-align: middle;
-    }
-}
-
 .dns-monitor-content-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @extend %flex-center;
     min-height: 200px;
     color: #646970;
 }
 
-/* DNS Snapshots Card Layout */
+// ==========================================================================
+// Snapshots
+// ==========================================================================
+
 #dns-snapshots-container {
     max-width: 550px;
     // margin: 0 auto;
@@ -462,6 +459,10 @@ button.dns-monitor-loading {
         word-break: break-all;
     }
 }
+
+// ==========================================================================
+// Footer
+// ==========================================================================
 
 #wpfooter {
     display: flex;

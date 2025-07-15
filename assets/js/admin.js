@@ -15,71 +15,21 @@
 
 		// Initialize everything
 		init: function () {
-			this.initializeToggleRecords();
-			this.initializeHTMXIntegration();
-			this.initializeChangesDropdown();
 			this.bindEvents();
-		},
-
-		// Initialize toggle records functionality
-		initializeToggleRecords: function () {
-			$(document).off('click', '.dns-toggle-records');
-			$(document).off('keydown', '.dns-toggle-records');
-			$(document).on('click', '.dns-toggle-records', this.handleToggleRecords.bind(this));
-			$(document).on('keydown', '.dns-toggle-records', this.handleToggleRecordsKeydown.bind(this));
-		},
-
-		// Initialize changes dropdown functionality
-		initializeChangesDropdown: function () {
-			$(document).off('change', '.dns-changes-dropdown');
-			$(document).on('change', '.dns-changes-dropdown', this.handleChangesDropdown.bind(this));
-
-			// Ensure all dropdown details are hidden by default
-			$('.dns-change-details').removeClass('dns-change-details-visible').hide();
-
-			// Reset all dropdown selections to default
-			$('.dns-changes-dropdown').val('');
-		},
-
-		// Initialize HTMX integration
-		initializeHTMXIntegration: function () {
-			// Listen for HTMX content updates triggered by htmx-helpers.js
-			$(document).on('dns-monitor:htmx-content-updated', this.onHTMXContentUpdated.bind(this));
-
-			// Add specific listener for DNS check completion to trigger refresh
-			if (typeof htmx !== 'undefined') {
-				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
-			}
 		},
 
 		// Bind additional events
 		bindEvents: function () {
-			// Handle manual refresh button if present
-			$(document).on('click', '.dns-refresh-snapshots', this.refreshSnapshots.bind(this));
-		},
+			// Use event delegation for all dynamic content
+			$(document)
+				.on('click', '.dns-toggle-records', this.handleToggleRecords.bind(this))
+				.on('keydown', '.dns-toggle-records', this.handleToggleRecordsKeydown.bind(this))
+				.on('change', '.dns-changes-dropdown', this.handleChangesDropdown.bind(this))
+				.on('click', '.dns-refresh-snapshots', this.refreshSnapshots.bind(this));
 
-		// Handle HTMX content updates
-		onHTMXContentUpdated: function (event, target) {
-			// Re-initialize toggle functionality for new content
-			this.initializeToggleRecords();
-			this.initializeChangesDropdown();
-
-			// Show success message if DNS check completed
-			var $notifications = $(target).find('.dns-monitor-notification');
-			if ($notifications.length > 0 && typeof DNSMonitorHTMX !== 'undefined') {
-				DNSMonitorHTMX.showNotificationsFromHTML($notifications);
-			}
-
-			// Admin-specific handling for DNS check results
-			if (target.id === 'dns-check-results') {
-				// Scroll to updated content if it's below the fold
-				target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-			}
-
-			// Flash the first snapshot card when snapshots list is reloaded after DNS check
-			if (this.dnsCheckPerformed && (target.id === 'dns-snapshots-container' || $(target).find('#dns-monitor-snapshots-list').length > 0)) {
-				this.flashFirstSnapshotCard();
-				this.dnsCheckPerformed = false; // Reset the flag
+			// Add specific listener for HTMX requests
+			if (typeof htmx !== 'undefined') {
+				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
 			}
 		},
 
@@ -90,42 +40,17 @@
 				var postUrl = evt.target.getAttribute('hx-post');
 				if (postUrl && postUrl.includes('endpoint=dns_check')) {
 					// Determine success/failure based on response content
-					var isSuccess = this.isDnsCheckSuccessful(evt);
+					var isSuccess = (evt.detail.xhr.responseText || '').indexOf('notice-error') === -1;
 
 					// Show the appropriate status notification in the header
 					this.showStatusNotification(isSuccess);
 
-					// If the check was processed successfully (even with warnings), set a flag
-					// to animate the snapshot list after HTMX swaps the content.
+					// If the check was processed successfully, flash the card
 					if (isSuccess) {
-						this.dnsCheckPerformed = true;
+						this.flashFirstSnapshotCard();
 					}
 				}
 			}
-		},
-
-		// Determine if DNS check was successful based on response content
-		isDnsCheckSuccessful: function (evt) {
-			// If HTTP request failed, it's definitely not successful
-			if (!evt.detail.successful) {
-				return false;
-			}
-
-			// Check the response content for error indicators
-			var responseText = evt.detail.xhr.responseText;
-			if (responseText) {
-				// Look for error notification in the response
-				if (responseText.includes('notice-error')) {
-					return false;
-				}
-				// Success or warning notifications indicate successful DNS check
-				if (responseText.includes('notice-success') || responseText.includes('notice-warning')) {
-					return true;
-				}
-			}
-
-			// Default to successful if HTTP request succeeded and no error indicators found
-			return true;
 		},
 
 		// Show status notification for DNS check
@@ -179,48 +104,23 @@
 		// Toggle records handler
 		handleToggleRecords: function (e) {
 			e.preventDefault();
+			var $toggle = $(e.currentTarget);
+			var $card = $toggle.closest('.dns-snapshot-card');
+			var isOpening = !$card.hasClass('dns-card-expanded');
 
-			var $this = $(e.currentTarget);
-			var recordId = $this.data('record-id');
-			var $content = $('#dns-record-content-' + recordId);
-			var $icon = $this.find('.dashicons');
-			var $card = $this.closest('.dns-snapshot-card');
+			// Close any other open cards
+			$('.dns-snapshot-card.dns-card-expanded').not($card).each(function () {
+				var $otherCard = $(this);
+				var $otherToggle = $otherCard.find('.dns-toggle-records');
+				$otherToggle.attr('aria-expanded', 'false');
+				$otherToggle.find('.dashicons').removeClass('dashicons-arrow-down').addClass('dashicons-arrow-right');
+				$otherCard.removeClass('dns-card-expanded');
+			});
 
-			// Check if this panel is already open
-			var isThisPanelOpen = $card.hasClass('dns-card-expanded');
-
-			// Close other open panels
-			if (this.currentOpenPanel && this.currentOpenPanel.get(0) !== $content.get(0)) {
-				// Reset the previous toggle header and card
-				if (this.currentOpenToggle) {
-					this.currentOpenToggle.find('.dashicons')
-						.removeClass('dashicons-arrow-down')
-						.addClass('dashicons-arrow-right');
-					this.currentOpenToggle.attr('aria-expanded', 'false');
-
-					// Remove expanded class from previous card
-					this.currentOpenToggle.closest('.dns-snapshot-card').removeClass('dns-card-expanded');
-				}
-			}
-
-			// Toggle the clicked panel
-			if (isThisPanelOpen) {
-				// Close this panel
-				$icon.removeClass('dashicons-arrow-down').addClass('dashicons-arrow-right');
-				$this.attr('aria-expanded', 'false');
-				$card.removeClass('dns-card-expanded');
-
-				this.currentOpenPanel = null;
-				this.currentOpenToggle = null;
-			} else {
-				// Open this panel
-				$icon.removeClass('dashicons-arrow-right').addClass('dashicons-arrow-down');
-				$this.attr('aria-expanded', 'true');
-				$card.addClass('dns-card-expanded');
-
-				this.currentOpenPanel = $content;
-				this.currentOpenToggle = $this;
-			}
+			// Toggle the clicked card's state
+			$toggle.attr('aria-expanded', isOpening);
+			$toggle.find('.dashicons').toggleClass('dashicons-arrow-right dashicons-arrow-down');
+			$card.toggleClass('dns-card-expanded');
 		},
 
 		// Handle changes dropdown selection
