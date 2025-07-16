@@ -1,0 +1,26 @@
+.dns-record-block {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    .type {
+        font-weight: bold;
+        min-width: 60px;
+        color: #555;
+    }
+
+    .host {
+        color: #777;
+        font-family: monospace;
+    }
+
+    .value {
+        color: #333;
+    }
+}
