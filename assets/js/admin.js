@@ -30,6 +30,7 @@
 			// Add specific listener for HTMX requests
 			if (typeof htmx !== 'undefined') {
 				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
+				document.body.addEventListener('flash-new-snapshot', this.flashFirstSnapshotCard.bind(this));
 			}
 		},
 
@@ -45,10 +46,6 @@
 					if (status) {
 						var isSuccess = status !== 'error';
 						this.showStatusNotification(isSuccess, decodeURIComponent(message || ''));
-
-						if (isSuccess) {
-							this.flashFirstSnapshotCard();
-						}
 					}
 				}
 			}
