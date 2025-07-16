@@ -15,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class DNS_Monitor_DB {
 	/**
+	 * Instance of this class
+	 *
+	 * @var DNS_Monitor_DB
+	 */
+	protected static $instance = null;
+
+	/**
 	 * Table prefix
 	 *
 	 * @var string
@@ -24,9 +31,21 @@ class DNS_Monitor_DB {
 	/**
 	 * Constructor
 	 */
-	public function __construct() {
+	private function __construct() {
 		global $wpdb;
 		$this->table_prefix = $wpdb->prefix . 'dns_';
+	}
+
+	/**
+	 * Get the singleton instance of this class
+	 *
+	 * @return DNS_Monitor_DB
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
 	}
 
 	/**
@@ -838,4 +857,4 @@ class DNS_Monitor_DB {
 				break;
 		}
 	}
-} 
+}

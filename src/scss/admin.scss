@@ -1,523 +1,536 @@
 /**
+ * Main SCSS file for DNS Monitor
+ */
+
+$color-brand-primary: #1f1131;
+$color-brand-secondary: #4b0082;
+$color-brand-accent: #ffe412;
+$color-brand-lightgray: #e3e3e3;
+$color-brand-darkgray: #5e5e5e;
+$color-text: #0b0b0b;
+$color-success: #2eac4c;
+$color-warning: darkorange;
+$color-error: #dc143c;
+$color-info: dodgerblue;
+
+/**
  * DNS Monitor Admin Styles
  */
 
-@import 'variables';
+// ==========================================================================
+// Placeholders & Mixins
+// ==========================================================================
+
+%flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin icon-pseudo($url, $height: 1em) {
+    &::before {
+        content: "";
+        display: inline-block;
+        height: $height;
+        aspect-ratio: 1/1;
+        background-image: url($url);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        transition: filter 0.3s ease;
+    }
+}
+
+// ==========================================================================
+// Fonts & Keyframes
+// ==========================================================================
 
 @font-face {
-	font-family: 'Montserrat';
-	src: url('../fonts/Montserrat-Regular.ttf') format('truetype');
-	font-style: normal;
-	font-weight: 400;
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
 }
 @font-face {
-	font-family: 'Montserrat';
-	src: url('../fonts/Montserrat-Medium.ttf') format('truetype');
-	font-style: normal;
-	font-weight: 500;
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-Medium.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 500;
 }
 @font-face {
-	font-family: 'Montserrat';
-	src: url('../fonts/Montserrat-Black.ttf') format('truetype');
-	font-style: normal;
-	font-weight: 900;
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-Black.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 900;
 }
 
 @keyframes dns-slide-in {
-	from {
-		transform: translateX(100%);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 @keyframes dns-card-flash {
-	0%, 50%, 100% {
-		background-color: transparent;
-	}
-	25%, 75% {
-		background-color: $color-brand-accent;
-	}
+    0%,
+    50%,
+    100% {
+        background-color: transparent;
+    }
+    25%,
+    75% {
+        background-color: $color-brand-accent;
+    }
 }
 
 @keyframes dns-spinner {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
+// ==========================================================================
+// Base Styles
+// ==========================================================================
+
 body {
-	background-color: white;
-	color: $color-text;
-	font-family: 'Montserrat', sans-serif;
+    background-color: white;
+    color: $color-text;
+    font-family: "Montserrat", sans-serif;
 }
 
 #wpcontent {
-	padding: 0 !important;
+    padding: 0 !important;
 }
 
 #wpbody-content {
-	& > .wrap {
-		display: flex;
-		flex-direction: column;
-		gap: 40px;
-		margin: 0;
-		padding: 30px 30px 100px;
+    & > .wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+        margin: 0;
+        padding: 30px 30px 100px;
 
-		@media (max-width: 782px) {
-			gap: 30px;
-			padding: 30px 20px;
-		}
-	}
+        @media (max-width: 782px) {
+            gap: 30px;
+            padding: 30px 20px;
+        }
+    }
 }
 
-/* Admin Header */ 
+// ==========================================================================
+// Header
+// ==========================================================================
+
 .dns-monitor-header {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: space-between;
-	align-items: center;
-	gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
 
-	.dns-monitor-branding {
-		display: flex;
-		align-items: center;
-		gap: 10px;
+    .dns-monitor-branding {
+        display: flex;
+        align-items: center;
+        gap: 10px;
 
-		.dns-monitor-logo {
-			height: 60px;
-			width: auto;
+        .dns-monitor-logo {
+            height: 60px;
+            width: auto;
 
-			@media (max-width: 960px) {
-				height: 30px;
-			}
-		}
+            @media (max-width: 960px) {
+                height: 30px;
+            }
+        }
 
-		.dns-monitor-title {
-			color: $color-brand-primary;
-			font-size: 1.5rem;
-			font-weight: 900;
-			line-height: 1;
-			text-transform: uppercase;
-			padding: 0;
-			position: absolute;
-			left: -9999px
-		}
-	}
+        .dns-monitor-title {
+            color: $color-brand-primary;
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1;
+            text-transform: uppercase;
+            padding: 0;
+            position: absolute;
+            left: -9999px;
+        }
+    }
 
-	.dns-monitor-status {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		margin-left: auto;
+    .dns-monitor-status {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-left: auto;
 
-		@media (max-width: 1239px) {
-			align-items: center;
-			margin: 1em 0;
-			order: 3;
-			width: 100%;
-		}
+        @media (max-width: 1239px) {
+            align-items: center;
+            margin: 1em 0;
+            order: 3;
+            width: 100%;
+        }
 
-		.dns-status-success {
-			color: $color-success;
+        .dns-status-success,
+        .dns-status-error {
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            gap: 0.5em;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            width: max-content;
+            height: 0;
+            overflow: visible;
 
-			&:before {
-				background-image: url('../img/dns-monitor-success.svg');
-			}
-		}
+            &.dns-status-show {
+                opacity: 1;
+            }
+        }
 
-		.dns-status-error {
-			color: $color-error;
+        .dns-status-success {
+            color: $color-success;
+            @include icon-pseudo("../img/dns-monitor-success.svg");
+        }
 
-			&:before {
-				background-image: url('../img/dns-monitor-error.svg');
-			}
-		}
+        .dns-status-error {
+            color: $color-error;
+            @include icon-pseudo("../img/dns-monitor-error.svg");
+        }
+    }
 
-		.dns-status-success,
-		.dns-status-error {
-			display: flex;
-			align-items: center;
-			font-size: 1.125rem;
-			gap: 0.5em;
-			opacity: 0;
-			transition: opacity 0.3s ease-in-out;
-			width: max-content;
-			height: 0px;
-			overflow: visible;
+    .dns-monitor-button-group {
+        display: flex;
+        align-items: center;
+        gap: 20px;
 
-			&.dns-status-show {
-				opacity: 1;
-			}
+        .dns-monitor-button {
+            background-color: $color-brand-accent;
+            border: none;
+            border-radius: 2em;
+            cursor: pointer;
+            color: $color-text;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            line-height: 1;
+            padding: 1em 2.5em;
+            text-transform: uppercase;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-width: max-content;
+            @include icon-pseudo("../img/dns-monitor-refresh.svg");
 
-			&:before {
-				aspect-ratio: 1/1;
-				content: '';
-				background-size: contain;
-				background-repeat: no-repeat;
-				background-position: center;
-				display: inline-block;
-				height: 1em;
-			}
-		}
-	}
+            &:hover {
+                background-color: $color-brand-secondary;
+                color: white;
 
-	.dns-monitor-button-group {
-		display: flex;
-		align-items: center;
-		gap: 20px;
+                &::before {
+                    filter: brightness(0) invert(1);
+                }
+            }
 
-		.dns-monitor-button {
-			background-color: $color-brand-accent;
-			border: none;
-			border-radius: 2em;
-			cursor: pointer;
-			color: $color-text;
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			font-size: 1.25rem;
-			font-weight: 900;
-			line-height: 1;
-			padding: 1em 2.5em;
-			text-transform: uppercase;
-			transition: all 0.3s ease;
-			min-width: max-content;
+            &.htmx-request::before {
+                animation: dns-spinner 1s linear infinite;
+            }
 
-			&:hover {
-				background-color: $color-brand-secondary;
-				color: white;
-
-				&:before {
-					filter: brightness(0) invert(1);
-				}
-			}
-
-			&:before {
-				aspect-ratio: 1/1;
-				content: '';
-				background-image: url('../img/dns-monitor-refresh.svg');
-				background-size: contain;
-				background-repeat: no-repeat;
-				background-position: center;
-				display: inline-block;
-				height: 1em;
-				transition: all 0.3s ease;
-			}
-
-			&.htmx-request:before {
-				animation: dns-spinner 1s linear infinite;
-			}
-
-			@media (max-width: 960px) {
-				font-size: 1rem;
-				padding: 0.75em 1.25em;
-			}
-		}
-	}
+            @media (max-width: 960px) {
+                font-size: 1rem;
+                padding: 0.75em 1.25em;
+            }
+        }
+    }
 }
 
-/* Loading states */
+// ==========================================================================
+// Loading & Notifications
+// ==========================================================================
+
 .dns-monitor-loading {
-	position: relative;
-	opacity: 0.7;
+    position: relative;
+    opacity: 0.7;
 }
 
 .dns-monitor-card-loading {
-	position: relative;
-	pointer-events: none;
+    position: relative;
+    pointer-events: none;
 }
 
 .dns-monitor-loading-overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(255, 255, 255, 0.8);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10;
+    @extend %flex-center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
 
-	.spinner {
-		margin: 0;
-		float: none;
-	}
+    .spinner {
+        margin: 0;
+        float: none;
+    }
 }
 
-/* HTMX Notifications */
 .dns-monitor-notifications {
-	position: fixed;
-	bottom: 20px;
-	right: 30px;
-	z-index: 100000;
-	max-width: 400px;
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    z-index: 100000;
+    max-width: 400px;
 }
 
 .dns-monitor-notification {
-	margin-bottom: 10px;
-	padding: 10px 15px;
-	border-radius: 4px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	animation: dns-slide-in 0.3s ease;
-	transition: opacity 0.3s ease;
-}
-
-/* HTMX Button Loading States */
-button.dns-monitor-loading {
-	cursor: wait;
-
-	.spinner {
-		margin-left: 5px;
-		float: none;
-		display: inline-block;
-		vertical-align: middle;
-	}
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: dns-slide-in 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 
 .dns-monitor-content-loading {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 200px;
-	color: #646970;
+    @extend %flex-center;
+    min-height: 200px;
+    color: #646970;
 }
 
-/* DNS Snapshots Card Layout */
+// ==========================================================================
+// Snapshots
+// ==========================================================================
+
 #dns-snapshots-container {
-	max-width: 550px;
-	// margin: 0 auto;
-	width: 100%;
+    max-width: 550px;
+    // margin: 0 auto;
+    width: 100%;
 }
 
 .dns-snapshots-list {
-	display: flex;
-	flex-direction: column;
-	gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .dns-snapshot-card {
-	background: white;
-	border: 1px solid $color-brand-lightgray;
-	border-radius: 4px;
-	transition: border-color 0.2s ease;
-	
-	&:hover,
-	&.dns-card-expanded {
-		border-color: $color-brand-darkgray;
-	}
+    background: white;
+    border: 1px solid $color-brand-lightgray;
+    border-radius: 4px;
+    transition: border-color 0.2s ease;
 
-	&.dns-card-flash {
-		animation: dns-card-flash 1s ease-in-out infinite;
-	}
+    &:hover,
+    &.dns-card-expanded {
+        border-color: $color-brand-darkgray;
+    }
+
+    &.dns-card-flash {
+        animation: dns-card-flash 1s ease-in-out infinite;
+    }
 }
 
 .dns-snapshot-card-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 1.25rem;
-	padding: 1em 1.5em;
-	gap: 20px;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-	user-select: none;
-	
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.25rem;
+    padding: 1em 1.5em;
+    gap: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    -webkit-user-select: none;
+    user-select: none;
 
-	@media (max-width: 960px) {
-		font-size: 1rem;
-	}
+    @media (max-width: 960px) {
+        font-size: 1rem;
+    }
 
-	.dns-snapshot-info {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 15px;
-		width: 100%;
-	
-		.dns-snapshot-date {
-			
-		}
-	}
+    .dns-snapshot-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        width: 100%;
+    }
 }
 
 .dns-snapshot-badges {
-	display: flex;
-	gap: 10px;
-	flex-wrap: nowrap;
+    display: flex;
+    gap: 10px;
+    flex-wrap: nowrap;
 
-	@media (max-width: 960px) {
-		gap: 0.5rem
-	}
+    @media (max-width: 960px) {
+        gap: 0.5rem;
+    }
 
-	.dns-badge {
-		display: inline-block;
-		border-radius: 50%;
-		aspect-ratio: 1/1;
-		height: 20px;
+    .dns-badge {
+        display: inline-block;
+        border-radius: 50%;
+        aspect-ratio: 1/1;
+        height: 20px;
 
-		@media (max-width: 960px) {
-			height: 1rem;
-		}
-		
-		&.dns-badge-addition {
-			background: $color-success;
-		}
-		
-		&.dns-badge-removal {
-			background: $color-error;
-		}
-		
-		&.dns-badge-modification {
-			background: $color-warning;
-		}
-	}
+        @media (max-width: 960px) {
+            height: 1rem;
+        }
+
+        &.dns-badge-addition {
+            background: $color-success;
+        }
+
+        &.dns-badge-removal {
+            background: $color-error;
+        }
+
+        &.dns-badge-modification {
+            background: $color-warning;
+        }
+    }
 }
 
 .dns-snapshot-card-content {
-	font-size: 1.125rem;
-	padding: 0 1.65em 0 1.65em;
-	height: 0;
-	overflow: hidden;
+    font-size: 1.125rem;
+    padding: 0 1.65em 0 1.65em;
+    height: 0;
+    overflow: hidden;
 
-	@media (max-width: 960px) {
-		font-size: 1rem;
-	}
+    @media (max-width: 960px) {
+        font-size: 1rem;
+    }
 
-	.dns-snapshot-card.dns-card-expanded & {
-		height: auto;
-	}
+    .dns-snapshot-card.dns-card-expanded & {
+        height: auto;
+    }
 }
 
 .dns-record-content {
-	flex: 1;
-	min-width: 0; // Prevent flex item from overflowing
+    flex: 1;
+    min-width: 0; // Prevent flex item from overflowing
 }
 
 .dns-record-block {
-	padding: 1.125em 0;
+    padding: 1.125em 0;
 
-	&:first-of-type {
-		padding-top: 0.5em;
-	}
+    &:first-of-type {
+        padding-top: 0.5em;
+    }
 
-	&:not(:last-of-type) {
-		border-bottom: 1px solid $color-brand-lightgray;
-	}
+    &:not(:last-of-type) {
+        border-bottom: 1px solid $color-brand-lightgray;
+    }
 
-	&.dns-record-unchanged {
-		color: inital;
-	}
+    &.dns-record-unchanged {
+        color: inital;
+    }
 
-	&.dns-record-added {
-		color: $color-success;
-	}
+    &.dns-record-added {
+        color: $color-success;
+    }
 
-	&.dns-record-removed {
-		color: $color-error;
-	}
+    &.dns-record-removed {
+        color: $color-error;
+    }
 
-	&.dns-record-modified {
-		color: $color-warning;
-	}
+    &.dns-record-modified {
+        color: $color-warning;
+    }
 }
 
 .dns-record-main {
-	display: grid;
-	line-height: 1.25;
-	grid-template-columns: 1fr 3fr 3fr;
-	gap: 0.5em;
-	
-	&:last-child {
-		margin-bottom: 0;
-	}
+    display: grid;
+    line-height: 1.25;
+    grid-template-columns: 1fr 3fr 3fr;
+    gap: 0.5em;
 
-	@media (max-width: 600px) {
-		grid-template-columns: 68px 1fr;
-		grid-template-rows: repeat(2, 1fr);
-		gap: 0.25em;
-	}
+    &:last-child {
+        margin-bottom: 0;
+    }
 
-	@media (max-width: 450px) {
-		grid-template-columns: 1fr;
-		grid-template-rows: repeat(3, 1fr);
-	}
+    @media (max-width: 600px) {
+        grid-template-columns: 68px 1fr;
+        grid-template-rows: repeat(2, 1fr);
+        gap: 0.25em;
+    }
 
-	.dns-record-type {
-		@media (min-width: 451px) and (max-width: 600px) {
-			grid-row: 1 / -1;
-		}
-	}
+    @media (max-width: 450px) {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, 1fr);
+    }
 
-	.dns-record-host,
-	.dns-record-value {
-		overflow: hidden;
-		overflow-wrap: break-word;
-		word-break: break-all;
-	}
+    .dns-record-type {
+        @media (min-width: 451px) and (max-width: 600px) {
+            grid-row: 1 / -1;
+        }
+    }
+
+    .dns-record-host,
+    .dns-record-value {
+        overflow: hidden;
+        overflow-wrap: break-word;
+        word-break: break-all;
+    }
 }
 
+// ==========================================================================
+// Footer
+// ==========================================================================
+
 #wpfooter {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-end;
-	gap: 50px;
-	padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 50px;
+    padding: 30px;
 
-	@media (max-width: 782px) {
-		margin: 0 !important;
-		padding: 30px 20px;
-	}
+    @media (max-width: 782px) {
+        margin: 0 !important;
+        padding: 30px 20px;
+    }
 
-	.dns-monitor-footer-wrapper {
-		display: flex !important;
-		gap: 10px 50px;
-	}
+    .dns-monitor-footer-wrapper {
+        display: flex !important;
+        gap: 10px 50px;
+    }
 
-	.dns-monitor-footer-link {
-		color: inherit;
-		text-decoration: none;
-	}
+    .dns-monitor-footer-link {
+        color: inherit;
+        text-decoration: none;
+    }
 
-	#footer-left {
-		.dns-monitor-footer-wrapper {
-			flex-direction: column;
-			align-items: flex-start;
-		}
+    #footer-left {
+        .dns-monitor-footer-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-		.dns-monitor-footer-logo {
-			display: block;
-			height: 34px;
-			width: auto;
-	
-			@media (max-width: 500px) {
-				height: 28px;
-			}
-		}
-	}
+        .dns-monitor-footer-logo {
+            display: block;
+            height: 34px;
+            width: auto;
 
-	#footer-upgrade {
-		.dns-monitor-footer-wrapper{
-			@media (max-width: 500px) {
-				flex-direction: column;
-				align-items: flex-end;
-			}
-		}
-	}
+            @media (max-width: 500px) {
+                height: 28px;
+            }
+        }
+    }
 
-	#footer-left,
-	#footer-upgrade {
-		float: none !important;
-	}
+    #footer-upgrade {
+        .dns-monitor-footer-wrapper {
+            @media (max-width: 500px) {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
+    }
 
-	.clear {
-		display: none !important;
-	}
+    #footer-left,
+    #footer-upgrade {
+        float: none !important;
+    }
+
+    .clear {
+        display: none !important;
+    }
 }

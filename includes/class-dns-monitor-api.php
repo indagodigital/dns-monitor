@@ -104,77 +104,22 @@ class DNS_Monitor_API {
 		$domain   = parse_url( $site_url, PHP_URL_HOST );
 
 		if ( ! $domain ) {
-			return $this->error_response( __( 'Unable to determine domain from site URL.', 'dns-monitor' ) );
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		}
 
 		try {
 			$result = DNS_Monitor_Records::fetch_and_process_records( $domain, true, true );
 
-			if ( $result ) {
-				// Check if there was a snapshot error
-				if ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) {
-					$error_message = isset( $result['snapshot_error_message'] ) 
-						? $result['snapshot_error_message'] 
-						: __( 'Failed to save DNS snapshot.', 'dns-monitor' );
-					return $this->error_response( $error_message );
-				}
-
-				// Get the total number of changes
-				$total_changes = isset( $result['changes_breakdown']['total'] ) ? $result['changes_breakdown']['total'] : 0;
-				
-				$message = $result['changes_detected'] 
-					? sprintf( 
-						/* translators: %d: Number of changes detected */
-						_n( 
-							'DNS check completed. %d change found.', 
-							'DNS check completed. %d changes found.', 
-							$total_changes, 
-							'dns-monitor' 
-						), 
-						$total_changes 
-					)
-					: __( 'DNS check completed. No changes found.', 'dns-monitor' );
-
-				$status = $result['changes_detected'] ? 'warning' : 'success';
-
-				// Build response data
-				$response_data = array(
-					'changes_detected' => $result['changes_detected'],
-					'total_records' => count( $result['records'] ?? array() ),
-					'last_check' => current_time( 'mysql' ),
-					'domain' => $domain,
-					'refresh_snapshots' => true,
-				);
-
-				// Add snapshot info if available
-				if ( isset( $result['snapshot_saved'] ) && $result['snapshot_saved'] ) {
-					$response_data['snapshot_saved'] = true;
-					if ( isset( $result['snapshot_id'] ) ) {
-						$response_data['snapshot_id'] = $result['snapshot_id'];
-					}
-				}
-
-				// Return updated button state and notification
-				return $this->success_response( $message, $response_data, $status );
-			} else {
-				return $this->error_response( __( 'DNS check failed. Unable to retrieve DNS records.', 'dns-monitor' ) );
+			if ( ! $result || ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) ) {
+				return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 			}
+
+			return $this->success_response( __( 'DNS check completed.', 'dns-monitor' ), [], 'success', true );
+
 		} catch ( Exception $e ) {
-			return $this->error_response( 
-				sprintf( 
-					/* translators: %s: Error message */
-					__( 'DNS check failed: %s', 'dns-monitor' ), 
-					$e->getMessage() 
-				) 
-			);
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		} catch ( Error $e ) {
-			return $this->error_response( 
-				sprintf( 
-					/* translators: %s: Error message */
-					__( 'DNS check failed with fatal error: %s', 'dns-monitor' ), 
-					$e->getMessage() 
-				) 
-			);
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		}
 	}
 
@@ -185,21 +130,16 @@ class DNS_Monitor_API {
 	 * @return string HTML response.
 	 */
 	public function handle_refresh_snapshots( $request ) {
-		$db = new DNS_Monitor_DB();
+		$db   = DNS_Monitor_DB::get_instance();
 		$page = max( 1, intval( $request['page'] ?? 1 ) );
 		$per_page = max( 1, min( 100, intval( $request['per_page'] ?? 20 ) ) );
 		$unified_view = isset( $request['unified_view'] ) && $request['unified_view'];
 
 		$snapshots = $db->get_snapshots( $page, $per_page );
 
-		if ( empty( $snapshots ) ) {
-			return '<div class="dns-monitor-content-loading">' . 
-				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
-				   '</div>';
-		}
-
-		$html = $this->render_snapshots_list( $snapshots, $db, $unified_view );
-		return $html;
+		ob_start();
+		include DNS_MONITOR_PLUGIN_DIR . 'includes/admin/views/snapshots-list.php';
+		return ob_get_clean();
 	}
 
 	/**
@@ -246,7 +186,7 @@ class DNS_Monitor_API {
 			return array( 'error' => __( 'Invalid snapshot ID.', 'dns-monitor' ) );
 		}
 
-		$db = new DNS_Monitor_DB();
+		$db = DNS_Monitor_DB::get_instance();
 		$deleted = $db->delete_snapshot( $snapshot_id );
 
 		if ( $deleted ) {
@@ -268,82 +208,9 @@ class DNS_Monitor_API {
 	 * @return string HTML table.
 	 */
 	private function render_snapshots_list( $snapshots, $db, $unified_view = true ) {
-		if ( empty( $snapshots ) ) {
-			return '<div class="dns-monitor-content-loading">' . 
-				   '<p>' . esc_html__( 'No snapshots found. Click "Check DNS Now" to create your first snapshot.', 'dns-monitor' ) . '</p>' .
-				   '</div>';
-		}
-
-		$html = '<div id="dns-monitor-snapshots-list" class="dns-snapshots-list">';
-
-		// Limit to 10 snapshots using a for loop to maintain proper previous snapshot references
-		$total_snapshots = count( $snapshots );
-		$max_snapshots = min( 10, $total_snapshots );
-		
-		for ( $index = 0; $index < $max_snapshots; $index++ ) {
-			$snapshot = $snapshots[ $index ];
-			
-			// Get records from the dns_records table instead of JSON data
-			$records = $this->get_records_for_snapshot( $snapshot->ID, $db );
-			if ( $records === false ) {
-				continue; // Skip snapshots with no records
-			}
-
-			// Get the changes breakdown from the database
-			$changes_count = isset( $snapshot->snapshot_changes ) ? intval( $snapshot->snapshot_changes ) : 0;
-			$additions = isset( $snapshot->snapshot_additions ) ? intval( $snapshot->snapshot_additions ) : 0;
-			$removals = isset( $snapshot->snapshot_removals ) ? intval( $snapshot->snapshot_removals ) : 0;
-			$modifications = isset( $snapshot->snapshot_modifications ) ? intval( $snapshot->snapshot_modifications ) : 0;
-			
-			// Get the previous record for comparison (for display purposes)
-			$previous_record = null;
-			$previous_records = array();
-			if ( $index < $total_snapshots - 1 ) {
-				$previous_record = $snapshots[ $index + 1 ];
-				$previous_records = $this->get_records_for_snapshot( $previous_record->ID, $db );
-				if ( $previous_records === false ) {
-					$previous_records = array(); // Handle missing data gracefully
-				}
-			}
-
-			// Add CSS class for highlighting cards with changes
-			$card_class = $changes_count > 0 ? 'dns-changes-detected' : '';
-			
-			$html .= '<div class="dns-snapshot-card ' . esc_attr( $card_class ) . '" data-snapshot-id="' . esc_attr( $snapshot->ID ) . '">';
-			
-			// Card header with date and changes summary (clickable)
-			$html .= '<div class="dns-snapshot-card-header dns-toggle-records" data-record-id="' . esc_attr( $snapshot->ID ) . '" aria-expanded="false" aria-controls="dns-record-content-' . esc_attr( $snapshot->ID ) . '" role="button" tabindex="0">';
-			$html .= '<div class="dns-snapshot-info">';
-			$html .= '<div class="dns-snapshot-date">' . esc_html( $this->format_wp_date( $snapshot->created_at ) ) . '</div>';
-			
-			$html .= '<div class="dns-snapshot-badges">';
-			if ( $changes_count > 0 ) {
-				if ( $additions > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-addition" title="' . esc_attr__( 'Additions', 'dns-monitor' ) . '"></span>';
-				}
-				if ( $modifications > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-modification" title="' . esc_attr__( 'Modifications', 'dns-monitor' ) . '"></span>';
-				}
-				if ( $removals > 0 ) {
-					$html .= '<span class="dns-badge dns-badge-removal" title="' . esc_attr__( 'Removals', 'dns-monitor' ) . '"></span>';
-				}
-			}
-			$html .= '</div>';
-			$html .= '</div>'; // End snapshot info
-			
-			$html .= '</div>'; // End card header
-			
-			// Card content (initially hidden)
-			$html .= '<div class="dns-snapshot-card-content" id="dns-record-content-' . esc_attr( $snapshot->ID ) . '">';
-			$html .= $this->render_snapshot_comparison_admin( $snapshot, $previous_record, $records, $previous_records, $db );
-			$html .= '</div>';
-			
-			$html .= '</div>'; // End card
-		}
-
-		$html .= '</div>'; // End list
-
-		return $html;
+		ob_start();
+		include DNS_MONITOR_PLUGIN_DIR . 'includes/admin/views/snapshots-list.php';
+		return ob_get_clean();
 	}
 
 	/**
@@ -689,17 +556,20 @@ class DNS_Monitor_API {
 	 * @param string $status Status type (success, warning, etc.).
 	 * @return string HTML response.
 	 */
-	private function success_response( $message, $data = array(), $status = 'success' ) {
-		$extra_attrs = '';
-		if ( isset( $data['refresh_snapshots'] ) && $data['refresh_snapshots'] ) {
-			$extra_attrs = ' data-refresh-snapshots="true"';
+	private function success_response( $message, $data = array(), $status = 'success', $oob_swap = false ) {
+		header( 'X-DNS-Monitor-Status: ' . esc_attr( $status ) );
+		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
+
+		if ( $oob_swap ) {
+			// Trigger a custom event after the swap is complete
+			header( 'HX-Trigger-After-Swap: dnsCheckComplete' );
+			$snapshots_html = $this->handle_refresh_snapshots( [] );
+			// Explicitly mark for out-of-band swap
+			return '<div id="dns-snapshots-container" hx-swap-oob="true">' . $snapshots_html . '</div>';
 		}
 
-		$html = '<div class="dns-monitor-notification notice notice-' . esc_attr( $status ) . '"' . $extra_attrs . '>';
-		$html .= '<p>' . esc_html( $message ) . '</p>';
-		$html .= '</div>';
-
-		return $html;
+		// Fallback for non-oob, though it's not really used for notifications anymore
+		return '<div class="notice notice-' . esc_attr( $status ) . '"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	/**
@@ -708,8 +578,19 @@ class DNS_Monitor_API {
 	 * @param string $message Error message.
 	 * @return string HTML response.
 	 */
-	private function error_response( $message ) {
-		return '<div class="dns-monitor-notification notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+	private function error_response( $message, $oob_swap = false ) {
+		header( 'X-DNS-Monitor-Status: error' );
+		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
+
+		if ( $oob_swap ) {
+			// On error, we don't want to refresh the whole table.
+			// We just send back an empty response because the notification is handled via headers.
+			// We still need to provide the OOB element to prevent HTMX from swapping the main content area.
+			return '<div id="dns-snapshots-container" hx-swap-oob="true"></div>';
+		}
+
+		// Fallback for non-oob
+		return '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	/**
@@ -930,4 +811,4 @@ class DNS_Monitor_API {
 			return array( 'error' => __( 'Failed to delete record.', 'dns-monitor' ) );
 		}
 	}
-} 
+}

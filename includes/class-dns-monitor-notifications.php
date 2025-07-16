@@ -15,6 +15,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class DNS_Monitor_Notifications {
 	/**
+	 * Instance of this class
+	 *
+	 * @var DNS_Monitor_Notifications
+	 */
+	protected static $instance = null;
+
+	/**
+	 * Get the singleton instance of this class
+	 *
+	 * @return DNS_Monitor_Notifications
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
 	 * Send notification about DNS changes
 	 *
 	 * @param string $domain_name      Domain name.
@@ -159,118 +178,15 @@ class DNS_Monitor_Notifications {
 	 * @return string
 	 */
 	public static function get_record_key_without_ttl( $record ) {
-		$key_parts = array();
+        $key_parts = array();
 
-		// Always include type and host.
-		$key_parts[] = $record['type'];
-		$key_parts[] = isset( $record['host'] ) ? $record['host'] : '';
+        // The unique key for an 'A' record is its host/domain name.
+        $key_parts[] = 'A';
+        $key_parts[] = isset( $record['host'] ) ? $record['host'] : '';
 
-		// Add type-specific key components.
-		switch ( $record['type'] ) {
-			case 'A':
-				$key_parts[] = isset( $record['ip'] ) ? $record['ip'] : '';
-				break;
-
-			case 'AAAA':
-				$key_parts[] = isset( $record['ipv6'] ) ? $record['ipv6'] : '';
-				break;
-
-			case 'CNAME':
-			case 'NS':
-			case 'PTR':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				break;
-
-			case 'MX':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				$key_parts[] = isset( $record['pri'] ) ? $record['pri'] : '';
-				break;
-
-			case 'TXT':
-				if ( isset( $record['txt'] ) ) {
-					$txt_content = is_array( $record['txt'] ) ? $record['txt'] : array( $record['txt'] );
-					// Sort to ensure consistent ordering.
-					sort( $txt_content );
-					$key_parts[] = md5( implode( '|', $txt_content ) );
-				}
-				break;
-
-			default:
-				// For unknown record types, include all fields except type, host, and ttl.
-				$other_fields = array();
-				foreach ( $record as $field => $value ) {
-					if ( 'type' !== $field && 'host' !== $field && 'ttl' !== $field ) {
-						$other_fields[] = $field . ':' . ( is_array( $value ) ? implode( ',', $value ) : $value );
-					}
-				}
-				sort( $other_fields );
-				$key_parts[] = md5( implode( '|', $other_fields ) );
-				break;
-		}
-
-		// Create the final key.
-		return implode( '-', array_map( 'strval', $key_parts ) );
-	}
-
-	/**
-	 * Generate a unique key for a DNS record
-	 *
-	 * @param array $record DNS record.
-	 * @return string
-	 */
-	public static function get_record_key( $record ) {
-		$key_parts = array();
-
-		// Always include type and host.
-		$key_parts[] = $record['type'];
-		$key_parts[] = isset( $record['host'] ) ? $record['host'] : '';
-
-		// Add type-specific key components.
-		switch ( $record['type'] ) {
-			case 'A':
-				$key_parts[] = isset( $record['ip'] ) ? $record['ip'] : '';
-				break;
-
-			case 'AAAA':
-				$key_parts[] = isset( $record['ipv6'] ) ? $record['ipv6'] : '';
-				break;
-
-			case 'CNAME':
-			case 'NS':
-			case 'PTR':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				break;
-
-			case 'MX':
-				$key_parts[] = isset( $record['target'] ) ? $record['target'] : '';
-				$key_parts[] = isset( $record['pri'] ) ? $record['pri'] : '';
-				break;
-
-			case 'TXT':
-				if ( isset( $record['txt'] ) ) {
-					$txt_content = is_array( $record['txt'] ) ? $record['txt'] : array( $record['txt'] );
-					// Sort to ensure consistent ordering.
-					sort( $txt_content );
-					$key_parts[] = md5( implode( '|', $txt_content ) );
-				}
-				break;
-
-			default:
-				// For unknown record types, include all fields except type and host.
-				$other_fields = array();
-				foreach ( $record as $field => $value ) {
-					if ( 'type' !== $field && 'host' !== $field ) {
-						$other_fields[] = $field . ':' . ( is_array( $value ) ? implode( ',', $value ) : $value );
-					}
-				}
-				sort( $other_fields );
-				$key_parts[] = md5( implode( '|', $other_fields ) );
-				break;
-		}
-
-		// Create the final key.
-		return implode( '-', array_map( 'strval', $key_parts ) );
-	}
+        // Create the final key.
+        return implode( '-', array_map( 'strval', $key_parts ) );
+    }
 
 	/**
 	 * Format a DNS record for summary display
@@ -279,45 +195,9 @@ class DNS_Monitor_Notifications {
 	 * @return string
 	 */
 	private function format_record_for_summary( $record ) {
-		$type = $record['type'];
-
-		switch ( $type ) {
-			case 'A':
-				$ip = isset( $record['ip'] ) ? $record['ip'] : '';
-				return "A Record: {$ip}";
-			
-			case 'AAAA':
-				$ipv6 = isset( $record['ipv6'] ) ? $record['ipv6'] : '';
-				return "AAAA Record: {$ipv6}";
-			
-			case 'CNAME':
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				return "CNAME Record: {$target}";
-			
-			case 'MX':
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				$priority = isset( $record['pri'] ) ? $record['pri'] : '';
-				return "MX Record: {$target} (priority: {$priority})";
-			
-			case 'TXT':
-				$txt = isset( $record['txt'] ) ? ( is_array( $record['txt'] ) ? implode( ' ', $record['txt'] ) : $record['txt'] ) : '';
-				return "TXT Record: \"{$txt}\"";
-				
-			case 'NS':
-				$target = isset( $record['target'] ) ? $record['target'] : '';
-				return "NS Record: {$target}";
-
-			default:
-				// Fallback for unknown record types.
-				$details = array();
-				foreach ( $record as $key => $value ) {
-					if ( 'type' !== $key && 'host' !== $key ) {
-						$details[] = "{$key}: {$value}";
-					}
-				}
-				return "{$type} Record: " . implode( ', ', $details );
-		}
-	}
+        $ip = isset( $record['ip'] ) ? $record['ip'] : '';
+        return "A Record: {$ip}";
+    }
 
 	/**
 	 * Send notification about plugin activation
@@ -404,4 +284,4 @@ class DNS_Monitor_Notifications {
 
 		return $notification_emails;
 	}
-} 
+}

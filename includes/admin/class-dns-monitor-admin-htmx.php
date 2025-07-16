@@ -57,8 +57,8 @@ class DNS_Monitor_Admin_HTMX {
 		$defaults = array(
 			'class' => 'dns-monitor-button',
 			'loading_text' => __( 'Checking DNS...', 'dns-monitor' ),
-			'target' => '#dns-check-results',
-			'swap' => 'innerHTML',
+			'target' => '#dns-snapshots-container',
+			'swap' => 'outerHTML',
 			'method' => 'POST', // DNS check endpoint requires POST
 		);
 
@@ -79,7 +79,7 @@ class DNS_Monitor_Admin_HTMX {
 	 */
 	public function render_snapshots_table( $attributes = array() ) {
 		$defaults = array(
-			'id' => 'dns-monitor-snapshots-table',
+			'id' => 'dns-snapshots-container', // Use the container ID
 			'auto_refresh' => false,
 			'refresh_interval' => 60000, // 60 seconds
 			'unified_view' => true,
@@ -89,7 +89,7 @@ class DNS_Monitor_Admin_HTMX {
 
 		$htmx_attrs = array(
 			'trigger' => 'load',
-			'target' => '#dns-snapshots-container',
+			'target' => '#' . $attributes['id'], // Target the container itself
 			'swap' => 'innerHTML',
 		);
 
@@ -102,9 +102,9 @@ class DNS_Monitor_Admin_HTMX {
 			$htmx_attrs['hx-vals'] = wp_json_encode( array( 'unified_view' => true ) );
 		}
 
-		$table_attrs = $this->htmx->get_htmx_attributes( 'refresh_snapshots', $htmx_attrs );
+		$container_attrs = $this->htmx->get_htmx_attributes( 'refresh_snapshots', $htmx_attrs );
 
-		$html = '<div id="' . esc_attr( $attributes['id'] ) . '" ' . $table_attrs . '>';
+		$html = '<div id="' . esc_attr( $attributes['id'] ) . '" ' . $container_attrs . '>';
 		$html .= '<div class="dns-monitor-content-loading">';
 		$html .= '<span class="spinner is-active"></span> ';
 		$html .= esc_html__( 'Loading snapshots...', 'dns-monitor' );
@@ -139,4 +139,4 @@ class DNS_Monitor_Admin_HTMX {
 
 		return $html;
 	}
-} 
+}

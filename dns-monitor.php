@@ -2,8 +2,8 @@
 /**
  * Plugin Name: DNS Monitor
  * Plugin URI: https://indagodigital.us/dns-monitor
- * Description: Monitor DNS changes for your domain and receive notifications when changes occur.
- * Version: 1.0.0
+ * Description: Keep a vigilant eye on your domain's most critical infrastructure. DNS Monitor automatically tracks your DNS records, takes periodic snapshots, and instantly alerts you to any changes. Prevent downtime, detect unauthorized modifications, and gain peace of mind knowing your site's foundation is secure.
+ * Version: 1.0.1
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Tested up to: 6.4
@@ -38,8 +38,8 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/class-dns-monitor.php';
  * @return DNS_Monitor
  */
 function dns_monitor_init() {
-	return DNS_Monitor::get_instance();
+	return DNS_Monitor::get_instance( __FILE__ );
 }
 
 // Initialize the plugin.
-dns_monitor_init(); 
+dns_monitor_init();
