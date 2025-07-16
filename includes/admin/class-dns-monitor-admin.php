@@ -105,7 +105,7 @@ class DNS_Monitor_Admin {
 			'manage_options',
 			'dns-monitor',
 			array( $this, 'snapshots_page' ),
-			'dashicons-welcome-view-site',
+			'dashicons-admin-site-alt3',
 			30
 		);
 
