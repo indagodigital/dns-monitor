@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: DNS Monitor
- * Plugin URI: https://indagodigital.us/dns-monitor
+ * Plugin URI: https://github.com/indagodigital/dns-monitor
  * Description: Keep a vigilant eye on your domain's most critical infrastructure. DNS Monitor automatically tracks your DNS records, takes periodic snapshots, and instantly alerts you to any changes. Prevent downtime, detect unauthorized modifications, and gain peace of mind knowing your site's foundation is secure.
  * Version: 1.0.1
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Tested up to: 6.4
- * Author: Indago Digital
+ * Author: IndaGo Digital
  * Author URI: https://indagodigital.us
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
