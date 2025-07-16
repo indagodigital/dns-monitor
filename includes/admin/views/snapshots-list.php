@@ -53,7 +53,6 @@ if ( empty( $snapshots ) ) {
 
 		// Add CSS class for highlighting cards with changes
 		$card_class = $changes_count > 0 ? 'dns-changes-detected' : '';
-		$card_class .= ( 0 === $index ) ? ' dns-card-expanded' : ''; // Expand the first card by default
 		?>
 		<div class="dns-snapshot-card <?php echo esc_attr( $card_class ); ?>" data-snapshot-id="<?php echo esc_attr( $snapshot->ID ); ?>">
 			
