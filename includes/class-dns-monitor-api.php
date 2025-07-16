@@ -104,71 +104,22 @@ class DNS_Monitor_API {
 		$domain   = parse_url( $site_url, PHP_URL_HOST );
 
 		if ( ! $domain ) {
-			$error_message = __( 'Unable to determine domain from site URL.', 'dns-monitor' );
-			return $this->error_response( $error_message, true );
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		}
 
 		try {
 			$result = DNS_Monitor_Records::fetch_and_process_records( $domain, true, true );
 
-			if ( ! $result ) {
-				$error_message = __( 'DNS check failed. Unable to retrieve DNS records.', 'dns-monitor' );
-				return $this->error_response( $error_message, true );
+			if ( ! $result || ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) ) {
+				return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 			}
 
-			// Check if there was a snapshot error
-			if ( isset( $result['snapshot_error'] ) && $result['snapshot_error'] ) {
-				$error_message = $result['snapshot_error_message'] ?? __( 'Failed to save DNS snapshot.', 'dns-monitor' );
-				return $this->error_response( $error_message, true );
-			}
+			return $this->success_response( __( 'DNS check completed.', 'dns-monitor' ), [], 'success', true );
 
-			// Only show "complete" message if a snapshot was saved or changes were detected
-			if ( isset( $result['snapshot_saved'] ) && $result['snapshot_saved'] ) {
-				$total_changes = $result['changes_breakdown']['total'] ?? 0;
-				
-				$message = $result['changes_detected']
-					? sprintf(
-						/* translators: %d: Number of changes detected */
-						_n(
-							'DNS check completed. %d change found.',
-							'DNS check completed. %d changes found.',
-							$total_changes,
-							'dns-monitor'
-						),
-						$total_changes
-					)
-					: __( 'DNS check completed. No changes found, new snapshot created.', 'dns-monitor' );
-
-				$status = $result['changes_detected'] ? 'warning' : 'success';
-
-				return $this->success_response( $message, [], $status, true );
-			} else {
-				// If no snapshot was saved (e.g., no changes and snapshot_behavior is not 'always')
-				return $this->success_response(
-					__( 'DNS check completed. No changes found.', 'dns-monitor' ),
-					array( 'refresh_snapshots' => false ),
-					'success',
-					true
-				);
-			}
 		} catch ( Exception $e ) {
-			return $this->error_response(
-				sprintf(
-					/* translators: %s: Error message */
-					__( 'DNS check failed: %s', 'dns-monitor' ),
-					$e->getMessage()
-				),
-				true
-			);
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		} catch ( Error $e ) {
-			return $this->error_response(
-				sprintf(
-					/* translators: %s: Error message */
-					__( 'DNS check failed with fatal error: %s', 'dns-monitor' ),
-					$e->getMessage()
-				),
-				true
-			);
+			return $this->error_response( __( 'DNS Check failed.', 'dns-monitor' ), true );
 		}
 	}
 
