@@ -580,8 +580,9 @@ class DNS_Monitor_API {
 		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
-			$snapshots_html = $this->handle_refresh_snapshots( [] );
-			return '<div id="dns-snapshots-container">' . $snapshots_html . '</div>';
+			// On error, we don't want to refresh the whole table.
+			// We just send back an empty response because the notification is handled via headers.
+			return '';
 		}
 
 		// Fallback for non-oob
