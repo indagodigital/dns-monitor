@@ -51,21 +51,4 @@ By default, notifications are sent to the site administrator's email address, wh
 
 ---
 
-## Screenshots
-
-1.  **Main Dashboard:** A clean overview of all historical snapshots, showing the most recent at the top.
-2.  **Record Comparison:** A detailed view showing added, removed, and modified records between snapshots.
-3.  **On-Demand DNS Check:** The fast, HTMX-powered interface allows for instant DNS checks without reloading the page.
-
----
-
 ## Changelog
-
-### 1.0.1
-
--   Tweak: Improved plugin description and readme file for clarity.
--   Fix: Corrected version mismatch between plugin header and defined constant.
-
-### 1.0.0
-
--   Initial public release.
