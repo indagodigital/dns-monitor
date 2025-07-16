@@ -1,40 +1,40 @@
 @keyframes flash-yellow {
-  0% {
-    background-color: transparent;
-  }
-  25% {
-    background-color: rgba(255, 235, 59, 0.5);
-  }
-  75% {
-    background-color: rgba(255, 235, 59, 0.5);
-  }
-  100% {
-    background-color: transparent;
-  }
+    0% {
+        background-color: transparent;
+    }
+    25% {
+        background-color: rgba(255, 235, 59, 0.5);
+    }
+    75% {
+        background-color: rgba(255, 235, 59, 0.5);
+    }
+    100% {
+        background-color: transparent;
+    }
 }
 .flash-yellow {
-  animation: flash-yellow 1.5s ease-in-out 3;
+    animation: flash-yellow 1.5s ease-in-out 3;
 }
 
 .dns-record-block {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  gap: 15px;
-  align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 .dns-record-block:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 .dns-record-block .type {
-  font-weight: bold;
-  min-width: 60px;
-  color: #555;
+    font-weight: bold;
+    min-width: 60px;
+    color: #555;
 }
 .dns-record-block .host {
-  color: #777;
-  font-family: monospace;
+    color: #777;
+    font-family: monospace;
 }
 .dns-record-block .value {
-  color: #333;
-}/*# sourceMappingURL=admin.css.map */
+    color: #333;
+} /*# sourceMappingURL=admin.css.map */
