@@ -30,7 +30,7 @@
 			// Add specific listener for HTMX requests
 			if (typeof htmx !== 'undefined') {
 				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
-				document.body.addEventListener('flash-new-snapshot', this.flashFirstSnapshotCard.bind(this));
+				document.body.addEventListener('htmx:afterSwap', this.onHTMXAfterSwap.bind(this));
 			}
 		},
 
@@ -47,6 +47,17 @@
 						var isSuccess = status !== 'error';
 						this.showStatusNotification(isSuccess, decodeURIComponent(message || ''));
 					}
+				}
+			}
+		},
+
+		// Handle HTMX after swap to trigger animations
+		onHTMXAfterSwap: function (evt) {
+			// Check if the swap was for the snapshots container
+			if (evt.detail.target.id === 'dns-snapshots-container') {
+				var status = evt.detail.xhr.getResponseHeader('X-DNS-Monitor-Status');
+				if (status && status !== 'error') {
+					this.flashFirstSnapshotCard();
 				}
 			}
 		},

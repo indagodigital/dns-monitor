@@ -561,7 +561,6 @@ class DNS_Monitor_API {
 		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
-			header( 'HX-Trigger-After-Swap: flash-new-snapshot' );
 			$snapshots_html = $this->handle_refresh_snapshots( [] );
 			return '<div id="dns-snapshots-container">' . $snapshots_html . '</div>';
 		}
