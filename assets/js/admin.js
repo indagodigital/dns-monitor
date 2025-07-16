@@ -144,9 +144,41 @@
 		}
 	};
 
+	/**
+	 * Finds the first snapshot card and applies a flash animation to it.
+	 * This function is safe to call multiple times.
+	 */
+	function highlightNewestSnapshot() {
+		const container = document.getElementById('dns-snapshots-container');
+		if (!container) {
+			return;
+		}
+
+		const firstCard = container.querySelector('.dns-snapshot-card:first-child');
+		if (firstCard) {
+			// Remove the class first to allow re-triggering the animation
+			firstCard.classList.remove('flash-new');
+
+			// Add the class back after a short delay to ensure the browser registers the change
+			setTimeout(() => {
+				firstCard.classList.add('flash-new');
+			}, 10);
+		}
+	}
+
 	// Initialize when document is ready
 	$(document).ready(function () {
 		DNSMonitorAdmin.init();
+		// Highlight on initial page load
+		highlightNewestSnapshot();
+	});
+
+	// Listen for HTMX's afterSwap event to highlight after a refresh
+	document.body.addEventListener('htmx:afterSwap', function (event) {
+		// Check if the swapped content is our snapshots container
+		if (event.detail.target.id === 'dns-snapshots-container') {
+			highlightNewestSnapshot();
+		}
 	});
 
 	// Make available globally for debugging

@@ -96,6 +96,25 @@ $color-info: dodgerblue;
     }
 }
 
+@keyframes flash-new-snapshot {
+    /* Defines 3 flashes: at 10%, 30%, and 50% */
+    10%,
+    30%,
+    50% {
+        background-color: $color-brand-accent;
+        border-color: darken($color-brand-accent, 10%);
+    }
+    /* Defines the state between flashes and the final state */
+    0%,
+    20%,
+    40%,
+    60%,
+    100% {
+        background-color: white;
+        border-color: $color-brand-lightgray;
+    }
+}
+
 // ==========================================================================
 // Base Styles
 // ==========================================================================
@@ -325,6 +344,12 @@ body {
     &:hover,
     &.dns-card-expanded {
         border-color: $color-brand-darkgray;
+    }
+
+    /* Add this new class for the animation */
+    &.flash-new {
+        /* Run the animation once for 1.5 seconds */
+        animation: flash-new-snapshot 1.5s ease-in-out 1;
     }
 
     &.dns-card-flash {

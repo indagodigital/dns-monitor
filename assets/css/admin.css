@@ -54,6 +54,18 @@
     transform: rotate(360deg);
   }
 }
+@keyframes flash-new-snapshot {
+  /* Defines 3 flashes: at 10%, 30%, and 50% */
+  10%, 30%, 50% {
+    background-color: #ffe412;
+    border-color: #dec500;
+  }
+  /* Defines the state between flashes and the final state */
+  0%, 20%, 40%, 60%, 100% {
+    background-color: white;
+    border-color: #e3e3e3;
+  }
+}
 body {
   background-color: white;
   color: #0b0b0b;
@@ -279,9 +291,14 @@ body {
   border: 1px solid #e3e3e3;
   border-radius: 4px;
   transition: border-color 0.2s ease;
+  /* Add this new class for the animation */
 }
 .dns-snapshot-card:hover, .dns-snapshot-card.dns-card-expanded {
   border-color: #5e5e5e;
+}
+.dns-snapshot-card.flash-new {
+  /* Run the animation once for 1.5 seconds */
+  animation: flash-new-snapshot 1.5s ease-in-out 1;
 }
 .dns-snapshot-card.dns-card-flash {
   animation: dns-card-flash 1s ease-in-out infinite;
