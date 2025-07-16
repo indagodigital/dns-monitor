@@ -32,15 +32,16 @@
 				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
 			}
 
-			// Listen for our custom event to apply the animation
+			// Listen for our custom event to apply the animation correctly after the swap
 			document.body.addEventListener('dnsCheckComplete', function (evt) {
-				const firstRow = document.querySelector('#dns-snapshots-container table tbody tr:first-child');
+				// evt.target is the #dns-snapshots-container that was just swapped in
+				const firstRow = evt.target.querySelector('table tbody tr:first-child');
 				if (firstRow) {
 					firstRow.classList.add('flash-yellow');
-					// Remove the class after the animation completes
-					setTimeout(() => {
+					// Remove the class automatically after the animation finishes
+					firstRow.addEventListener('animationend', () => {
 						firstRow.classList.remove('flash-yellow');
-					}, 1500); // Duration of the animation
+					}, { once: true });
 				}
 			});
 		},
