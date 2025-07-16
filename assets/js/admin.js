@@ -31,6 +31,18 @@
 			if (typeof htmx !== 'undefined') {
 				document.body.addEventListener('htmx:afterRequest', this.onHTMXAfterRequest.bind(this));
 			}
+
+			// Listen for our custom event to apply the animation
+			document.body.addEventListener('dnsCheckComplete', function (evt) {
+				const firstRow = document.querySelector('#dns-snapshots-container table tbody tr:first-child');
+				if (firstRow) {
+					firstRow.classList.add('flash-yellow');
+					// Remove the class after the animation completes
+					setTimeout(() => {
+						firstRow.classList.remove('flash-yellow');
+					}, 1500); // Duration of the animation
+				}
+			});
 		},
 
 		// Handle HTMX after request to set flags or trigger animations

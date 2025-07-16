@@ -1,3 +1,21 @@
+@keyframes flash-yellow {
+  0% {
+    background-color: transparent;
+  }
+  25% {
+    background-color: rgba(255, 235, 59, 0.5);
+  }
+  75% {
+    background-color: rgba(255, 235, 59, 0.5);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.flash-yellow {
+  animation: flash-yellow 1.5s ease-in-out;
+}
+
 .dns-record-block {
   padding: 10px;
   border-bottom: 1px solid #eee;

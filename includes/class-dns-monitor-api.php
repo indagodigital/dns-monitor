@@ -561,8 +561,11 @@ class DNS_Monitor_API {
 		header( 'X-DNS-Monitor-Message: ' . rawurlencode( $message ) );
 
 		if ( $oob_swap ) {
+			// Trigger a custom event after the swap is complete
+			header( 'HX-Trigger-After-Swap: dnsCheckComplete' );
 			$snapshots_html = $this->handle_refresh_snapshots( [] );
-			return '<div id="dns-snapshots-container">' . $snapshots_html . '</div>';
+			// Explicitly mark for out-of-band swap
+			return '<div id="dns-snapshots-container" hx-swap-oob="true">' . $snapshots_html . '</div>';
 		}
 
 		// Fallback for non-oob, though it's not really used for notifications anymore
@@ -582,7 +585,8 @@ class DNS_Monitor_API {
 		if ( $oob_swap ) {
 			// On error, we don't want to refresh the whole table.
 			// We just send back an empty response because the notification is handled via headers.
-			return '';
+			// We still need to provide the OOB element to prevent HTMX from swapping the main content area.
+			return '<div id="dns-snapshots-container" hx-swap-oob="true"></div>';
 		}
 
 		// Fallback for non-oob

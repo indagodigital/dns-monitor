@@ -224,7 +224,7 @@ class DNS_Monitor_HTMX {
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Configure HTMX globally
-            htmx.config.globalViewTransitions = true;
+            htmx.config.globalViewTransitions = false;
             htmx.config.defaultSwapStyle = 'outerHTML';
             htmx.config.defaultSwapDelay = 100;
             htmx.config.defaultSettleDelay = 100;
