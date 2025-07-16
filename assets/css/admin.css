@@ -1,40 +1,469 @@
-@keyframes flash-yellow {
-    0% {
-        background-color: transparent;
-    }
-    25% {
-        background-color: rgba(255, 235, 59, 0.5);
-    }
-    75% {
-        background-color: rgba(255, 235, 59, 0.5);
-    }
-    100% {
-        background-color: transparent;
-    }
+/**
+ * Main SCSS file for DNS Monitor
+ */
+/**
+ * DNS Monitor Admin Styles
+ */
+.dns-monitor-content-loading, .dns-monitor-loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.flash-yellow {
-    animation: flash-yellow 1.5s ease-in-out 3;
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/Montserrat-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/Montserrat-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/Montserrat-Black.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 900;
+}
+@keyframes dns-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes dns-card-flash {
+  0%, 50%, 100% {
+    background-color: transparent;
+  }
+  25%, 75% {
+    background-color: #ffe412;
+  }
+}
+@keyframes dns-spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+body {
+  background-color: white;
+  color: #0b0b0b;
+  font-family: "Montserrat", sans-serif;
+}
+
+#wpcontent {
+  padding: 0 !important;
+}
+
+#wpbody-content > .wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin: 0;
+  padding: 30px 30px 100px;
+}
+@media (max-width: 782px) {
+  #wpbody-content > .wrap {
+    gap: 30px;
+    padding: 30px 20px;
+  }
+}
+
+.dns-monitor-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.dns-monitor-header .dns-monitor-branding {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dns-monitor-header .dns-monitor-branding .dns-monitor-logo {
+  height: 60px;
+  width: auto;
+}
+@media (max-width: 960px) {
+  .dns-monitor-header .dns-monitor-branding .dns-monitor-logo {
+    height: 30px;
+  }
+}
+.dns-monitor-header .dns-monitor-branding .dns-monitor-title {
+  color: #1f1131;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  padding: 0;
+  position: absolute;
+  left: -9999px;
+}
+.dns-monitor-header .dns-monitor-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+@media (max-width: 1239px) {
+  .dns-monitor-header .dns-monitor-status {
+    align-items: center;
+    margin: 1em 0;
+    order: 3;
+    width: 100%;
+  }
+}
+.dns-monitor-header .dns-monitor-status .dns-status-success,
+.dns-monitor-header .dns-monitor-status .dns-status-error {
+  display: flex;
+  align-items: center;
+  font-size: 1.125rem;
+  gap: 0.5em;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  width: max-content;
+  height: 0;
+  overflow: visible;
+}
+.dns-monitor-header .dns-monitor-status .dns-status-success.dns-status-show,
+.dns-monitor-header .dns-monitor-status .dns-status-error.dns-status-show {
+  opacity: 1;
+}
+.dns-monitor-header .dns-monitor-status .dns-status-success {
+  color: #2eac4c;
+}
+.dns-monitor-header .dns-monitor-status .dns-status-success::before {
+  content: "";
+  display: inline-block;
+  height: 1em;
+  aspect-ratio: 1/1;
+  background-image: url("../img/dns-monitor-success.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: filter 0.3s ease;
+}
+.dns-monitor-header .dns-monitor-status .dns-status-error {
+  color: #dc143c;
+}
+.dns-monitor-header .dns-monitor-status .dns-status-error::before {
+  content: "";
+  display: inline-block;
+  height: 1em;
+  aspect-ratio: 1/1;
+  background-image: url("../img/dns-monitor-error.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: filter 0.3s ease;
+}
+.dns-monitor-header .dns-monitor-button-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.dns-monitor-header .dns-monitor-button-group .dns-monitor-button {
+  background-color: #ffe412;
+  border: none;
+  border-radius: 2em;
+  cursor: pointer;
+  color: #0b0b0b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 1em 2.5em;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-width: max-content;
+}
+.dns-monitor-header .dns-monitor-button-group .dns-monitor-button::before {
+  content: "";
+  display: inline-block;
+  height: 1em;
+  aspect-ratio: 1/1;
+  background-image: url("../img/dns-monitor-refresh.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: filter 0.3s ease;
+}
+.dns-monitor-header .dns-monitor-button-group .dns-monitor-button:hover {
+  background-color: #4b0082;
+  color: white;
+}
+.dns-monitor-header .dns-monitor-button-group .dns-monitor-button:hover::before {
+  filter: brightness(0) invert(1);
+}
+.dns-monitor-header .dns-monitor-button-group .dns-monitor-button.htmx-request::before {
+  animation: dns-spinner 1s linear infinite;
+}
+@media (max-width: 960px) {
+  .dns-monitor-header .dns-monitor-button-group .dns-monitor-button {
+    font-size: 1rem;
+    padding: 0.75em 1.25em;
+  }
+}
+
+.dns-monitor-loading {
+  position: relative;
+  opacity: 0.7;
+}
+
+.dns-monitor-card-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.dns-monitor-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+.dns-monitor-loading-overlay .spinner {
+  margin: 0;
+  float: none;
+}
+
+.dns-monitor-notifications {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 100000;
+  max-width: 400px;
+}
+
+.dns-monitor-notification {
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: dns-slide-in 0.3s ease;
+  transition: opacity 0.3s ease;
+}
+
+.dns-monitor-content-loading {
+  min-height: 200px;
+  color: #646970;
+}
+
+#dns-snapshots-container {
+  max-width: 550px;
+  width: 100%;
+}
+
+.dns-snapshots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dns-snapshot-card {
+  background: white;
+  border: 1px solid #e3e3e3;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+.dns-snapshot-card:hover, .dns-snapshot-card.dns-card-expanded {
+  border-color: #5e5e5e;
+}
+.dns-snapshot-card.dns-card-flash {
+  animation: dns-card-flash 1s ease-in-out infinite;
+}
+
+.dns-snapshot-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.25rem;
+  padding: 1em 1.5em;
+  gap: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+@media (max-width: 960px) {
+  .dns-snapshot-card-header {
+    font-size: 1rem;
+  }
+}
+.dns-snapshot-card-header .dns-snapshot-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  width: 100%;
+}
+
+.dns-snapshot-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+@media (max-width: 960px) {
+  .dns-snapshot-badges {
+    gap: 0.5rem;
+  }
+}
+.dns-snapshot-badges .dns-badge {
+  display: inline-block;
+  border-radius: 50%;
+  aspect-ratio: 1/1;
+  height: 20px;
+}
+@media (max-width: 960px) {
+  .dns-snapshot-badges .dns-badge {
+    height: 1rem;
+  }
+}
+.dns-snapshot-badges .dns-badge.dns-badge-addition {
+  background: #2eac4c;
+}
+.dns-snapshot-badges .dns-badge.dns-badge-removal {
+  background: #dc143c;
+}
+.dns-snapshot-badges .dns-badge.dns-badge-modification {
+  background: darkorange;
+}
+
+.dns-snapshot-card-content {
+  font-size: 1.125rem;
+  padding: 0 1.65em 0 1.65em;
+  height: 0;
+  overflow: hidden;
+}
+@media (max-width: 960px) {
+  .dns-snapshot-card-content {
+    font-size: 1rem;
+  }
+}
+.dns-snapshot-card.dns-card-expanded .dns-snapshot-card-content {
+  height: auto;
+}
+
+.dns-record-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .dns-record-block {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    gap: 15px;
-    align-items: center;
+  padding: 1.125em 0;
 }
-.dns-record-block:last-child {
-    border-bottom: none;
+.dns-record-block:first-of-type {
+  padding-top: 0.5em;
 }
-.dns-record-block .type {
-    font-weight: bold;
-    min-width: 60px;
-    color: #555;
+.dns-record-block:not(:last-of-type) {
+  border-bottom: 1px solid #e3e3e3;
 }
-.dns-record-block .host {
-    color: #777;
-    font-family: monospace;
+.dns-record-block.dns-record-unchanged {
+  color: inital;
 }
-.dns-record-block .value {
-    color: #333;
-} /*# sourceMappingURL=admin.css.map */
+.dns-record-block.dns-record-added {
+  color: #2eac4c;
+}
+.dns-record-block.dns-record-removed {
+  color: #dc143c;
+}
+.dns-record-block.dns-record-modified {
+  color: darkorange;
+}
+
+.dns-record-main {
+  display: grid;
+  line-height: 1.25;
+  grid-template-columns: 1fr 3fr 3fr;
+  gap: 0.5em;
+}
+.dns-record-main:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .dns-record-main {
+    grid-template-columns: 68px 1fr;
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0.25em;
+  }
+}
+@media (max-width: 450px) {
+  .dns-record-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, 1fr);
+  }
+}
+@media (min-width: 451px) and (max-width: 600px) {
+  .dns-record-main .dns-record-type {
+    grid-row: 1/-1;
+  }
+}
+.dns-record-main .dns-record-host,
+.dns-record-main .dns-record-value {
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+#wpfooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 50px;
+  padding: 30px;
+}
+@media (max-width: 782px) {
+  #wpfooter {
+    margin: 0 !important;
+    padding: 30px 20px;
+  }
+}
+#wpfooter .dns-monitor-footer-wrapper {
+  display: flex !important;
+  gap: 10px 50px;
+}
+#wpfooter .dns-monitor-footer-link {
+  color: inherit;
+  text-decoration: none;
+}
+#wpfooter #footer-left .dns-monitor-footer-wrapper {
+  flex-direction: column;
+  align-items: flex-start;
+}
+#wpfooter #footer-left .dns-monitor-footer-logo {
+  display: block;
+  height: 34px;
+  width: auto;
+}
+@media (max-width: 500px) {
+  #wpfooter #footer-left .dns-monitor-footer-logo {
+    height: 28px;
+  }
+}
+@media (max-width: 500px) {
+  #wpfooter #footer-upgrade .dns-monitor-footer-wrapper {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+#wpfooter #footer-left,
+#wpfooter #footer-upgrade {
+  float: none !important;
+}
+#wpfooter .clear {
+  display: none !important;
+}/*# sourceMappingURL=admin.css.map */

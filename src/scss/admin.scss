@@ -1,8 +1,22 @@
 /**
- * DNS Monitor Admin Styles
+ * Main SCSS file for DNS Monitor
  */
 
-@import "variables";
+$color-brand-primary: #1f1131;
+$color-brand-secondary: #4b0082;
+$color-brand-accent: #ffe412;
+$color-brand-lightgray: #e3e3e3;
+$color-brand-darkgray: #5e5e5e;
+$color-text: #0b0b0b;
+$color-success: #2eac4c;
+$color-warning: darkorange;
+$color-error: #dc143c;
+$color-info: dodgerblue;
+$color-background: #f5f5f5;
+
+/**
+ * DNS Monitor Admin Styles
+ */
 
 // ==========================================================================
 // Placeholders & Mixins
